@@ -13,6 +13,8 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb  # Persiste los datos de InfluxDB
       - ./influxdb/influxdb.conf:/etc/influxdb/influxdb.conf
+    command: 
+      influxd -config /etc/influxdb/influxdb.conf
 
   grafana:
     image: grafana/grafana:latest        # Usa la última versión estable
