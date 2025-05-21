@@ -1,27 +1,41 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Gauge } from 'k6/metrics';
-import * as TypesTest from '../utils/TypeTest.js'
- 
 
-// Creamos un metricón para VUs activos (opcional, k6 ya expone la métrica "vus" de forma automática)
+// Métrica personalizada (aunque "vus" ya existe por defecto)
 const vusGauge = new Gauge('active_vus');
 
-// Tomamos el valor de la variable de entorno TYPE_TEST (p. ej. “loadTest”)
-const typeTestTag = __ENV.TYPE_TEST || 'default';
+// Tipos de prueba disponibles
+const testConfigs = {
+  smokeTest: {
+    vus: 10,
+    duration: '1m',
+  },
+  loadTest: {
+    stages: [
+      { duration: '30s', target: 20 },
+      { duration: '1m', target: 50 },
+      { duration: '30s', target: 0 },
+      { duration: '1m', target: 100 },
+      { duration: '30s', target: 0 },
+    ],
+  },
+  default: {
+    vus: 1,
+    duration: '30s',
+  },
+};
 
-export let options = TypesTest.typesTest[__ENV.TYPE_TEST]
+// Selección dinámica del tipo de prueba
+const selectedConfig = __ENV.TYPE_TEST || 'default';
+export const options = testConfigs[selectedConfig];
 
+// Escenario de prueba
 export default function () {
-  // Registramos cuántos VUs hay activos en este instante
   vusGauge.add(__VU);
 
-  // Hacemos la petición al endpoint de prueba
   const res = http.get('https://test.k6.io');
-
-  // Verificamos status 200
   check(res, { 'status is 200': (r) => r.status === 200 });
 
-  // Pause de 1 segundo entre iteraciones
   sleep(1);
 }
