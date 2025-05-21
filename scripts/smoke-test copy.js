@@ -1,35 +1,26 @@
 import http from 'k6/http';
-import { check, sleep, group } from 'k6';
-import { Counter, Trend, Rate } from 'k6/metrics';
+import { check, sleep } from 'k6';
+import { Gauge } from 'k6/metrics';
 
-// 1. Métricas personalizadas para el registro
-const registerAttempts = new Counter('user_register_attempts');
-const registerSuccessCounter = new Counter('user_register_success');
-const registerFailures = new Rate('user_register_failures');
-const registerDuration = new Trend('register_duration');
+// Métrica personalizada (aunque "vus" ya existe por defecto)
+const vusGauge = new Gauge('active_vus');
 
-// 2. Opciones de la prueba: Escenario de Rampa (Ramping VUs) para el registro
-export const options = {
-  // ext: {
-  //   influxdb: {
-  //     address: 'http://50.19.40.139:8086/k6db', // <-- ¡CONFIRMA ESTA IP!
-  //   },
-  // },
-  scenarios: {
-    // Rampa de 0 a 10 usuarios de registro en 5 minutos
-    // Puedes ajustar el 'target' y la 'duration' según la cantidad de usuarios que necesites crear
-    // y la velocidad a la que quieras crearlos.
-    register_ramp_scenario: {
-      executor: 'ramping-vus',
-      startVUs: 0,
+// Tipos de prueba disponibles
+const testConfigs = {
+  smokeTest: {
+    vus: 10,
+    duration: '1m',
+  },
+  loadTest: {
       stages: [
         { duration: '5m', target: 15 }, // Rampa de 0 a 15 VUs registrando usuarios
         { duration: '1m', target: 15 }, // Mantener 15 VUs registrando por un minuto más (opcional)
         { duration: '1m', target: 0 },  // Bajar a 0 VUs
       ],
-      gracefulStop: '30s',
-      vus: 15, // Número máximo de VUs para este escenario
-    },
+  },
+  default: {
+    vus: 15,
+    duration: '30s',
   },
   // Umbrales para el registro
   thresholds: {
@@ -38,6 +29,10 @@ export const options = {
     'user_register_failures': ['rate<0.05'], // Menos del 5% de fallos específicos de registro
   },
 };
+
+// Selección dinámica del tipo de prueba
+const selectedConfig = __ENV.TYPE_TEST || 'default';
+export const options = testConfigs[selectedConfig];
 
 // 3. Función principal de la prueba (lo que cada usuario virtual hará repetidamente)
 export default function () {
