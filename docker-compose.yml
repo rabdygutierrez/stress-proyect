@@ -11,8 +11,8 @@ services:
       - INFLUXDB_ADMIN_USER=admin      # Usuario administrador
       - INFLUXDB_ADMIN_PASSWORD=adminpass  # Contraseña del administrador
     volumes:
-      - influxdb_data:/var/lib/influxdb  # Persiste los datos de InfluxDB
-      - ./influxdb/influxdb.conf:/etc/influxdb/influxdb.conf
+    #   - influxdb_data:/var/lib/influxdb  # Persiste los datos de InfluxDB
+    #  - ./influxdb/influxdb.conf:/etc/influxdb/influxdb.conf
     command: 
       influxd -config /etc/influxdb/influxdb.conf
 
