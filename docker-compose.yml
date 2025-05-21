@@ -41,12 +41,14 @@ services:
       - k6_net                          # k6 se conecta a la red k6
     depends_on:
       - influxdb
-    command: ["k6", "run"] 
-    args: 
-      - "--out"
-      - "influxdb=http://admin:adminpass@influxdb:8086/k6" # 
-      - "-e"
-      - "TYPE_TEST=loadTest"
+    environment:
+      - K6_SCRIPT_TO_RUN=/scripts/smoke-test.js 
+      - TYPE_TEST=loadTest  
+    command: >
+      run
+      --out influxdb=http://admin:adminpass@influxdb:8086/k6
+      -e TYPE_TEST=loadTest
+      ${K6_SCRIPT_TO_RUN} 
     volumes:
       - ./scripts:/scripts
     ports:
