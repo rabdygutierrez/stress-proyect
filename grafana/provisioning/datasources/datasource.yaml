@@ -4,13 +4,17 @@ datasources:
   - name: InfluxDB
     type: influxdb
     access: proxy
+    database: k6
     orgId: 1
     url: http://influxdb:8086
-    basicAuth: false
     isDefault: true
-    database: k6
-    user: admin
-    secureJsonData:
-      password: adminpass
-    version: 1
-    editable: true
+    uid: P951FEA4DEBAPTEAM
+   # basicAuth: false
+  
+   
+    #user: admin
+    #secureJsonData:
+    #  password: adminpass
+    #version: 1
+    #editable: true
+   
