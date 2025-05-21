@@ -1,6 +1,8 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Gauge } from 'k6/metrics';
+import * as TypesTest from '../utils/TypeTest.js'
+ 
 
 // Creamos un metricón para VUs activos (opcional, k6 ya expone la métrica "vus" de forma automática)
 const vusGauge = new Gauge('active_vus');
