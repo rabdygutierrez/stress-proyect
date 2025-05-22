@@ -45,7 +45,7 @@ services:
       run
       --out influxdb=http://admin:adminpass@influxdb:8086/k6
       -e TYPE_TEST=loadTest
-       /scripts/smoke-test.js
+       /scripts/k6_register_users.js
     volumes:
       - ./scripts:/scripts
     ports:
@@ -62,3 +62,4 @@ volumes:
     driver: local
 #      /scripts/k6_register_users.js
 #      /scripts/k6_full_user_flow_test.js
+#      /scripts/smoke-test.js
