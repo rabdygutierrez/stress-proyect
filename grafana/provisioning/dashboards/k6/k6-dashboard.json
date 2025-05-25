@@ -21,7 +21,7 @@
       }
     ]
   },
-  "description": "Powened by Rabdy.",
+  "description": "Powered by Randy.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "gnetId": 18093,
@@ -31,13 +31,127 @@
   "liveNow": false,
   "panels": [
     {
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "HTTP Request Duration p95",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "HTTP Request Duration p99",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Concurrent Users (vus)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Throughput (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Failed HTTP Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Login Attempts vs Successes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT sum(\"value\") FROM \"user_login_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        },
+        {
+          "query": "SELECT sum(\"value\") FROM \"user_login_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "B",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "InfoUser Attempts vs Successes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT sum(\"value\") FROM \"info_user_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        },
+        {
+          "query": "SELECT sum(\"value\") FROM \"info_user_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "B",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
       "collapsed": false,
       "datasource": "M6sBjH1Vk",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 32
       },
       "id": 69,
       "panels": [],
@@ -113,7 +227,7 @@
         "h": 7,
         "w": 6,
         "x": 6,
-        "y": 3
+        "y": 33
       },
       "id": 17,
       "interval": "1s",
@@ -190,7 +304,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 40
       },
       "id": 70,
       "panels": [],
@@ -329,7 +443,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 41
       },
       "id": 5,
       "interval": ">1s",
@@ -589,7 +703,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 41
       },
       "heatmap": {},
       "height": "250px",
@@ -744,7 +858,7 @@
         "h": 3,
         "w": 4,
         "x": 0,
-        "y": 18
+        "y": 48
       },
       "id": 12,
       "links": [],
@@ -859,7 +973,7 @@
         "h": 3,
         "w": 4,
         "x": 4,
-        "y": 18
+        "y": 48
       },
       "id": 16,
       "links": [],
@@ -974,7 +1088,7 @@
         "h": 3,
         "w": 4,
         "x": 8,
-        "y": 18
+        "y": 48
       },
       "id": 15,
       "links": [],
@@ -1080,7 +1194,7 @@
         "h": 3,
         "w": 4,
         "x": 12,
-        "y": 18
+        "y": 48
       },
       "id": 14,
       "links": [],
@@ -1199,7 +1313,7 @@
         "h": 3,
         "w": 4,
         "x": 16,
-        "y": 18
+        "y": 48
       },
       "id": 11,
       "links": [],
@@ -1301,7 +1415,7 @@
         "h": 3,
         "w": 4,
         "x": 20,
-        "y": 18
+        "y": 48
       },
       "id": 13,
       "links": [],
@@ -1715,7 +1829,7 @@
         "h": 23,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 51
       },
       "id": 67,
       "links": [],
@@ -1858,7 +1972,7 @@
         "h": 23,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 74
       },
       "id": 75,
       "libraryPanel": {
@@ -1866,120 +1980,6 @@
         "uid": "5Wefmef4z"
       },
       "title": "Groups and latencies"
-    },
-    {
-      "title": "HTTP Request Rate",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "HTTP Request Duration p95",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "HTTP Request Duration p99",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Concurrent Users (vus)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Throughput (req/s)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Failed HTTP Requests",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Login Attempts vs Successes",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT sum(\"value\") FROM \"user_login_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        },
-        {
-          "query": "SELECT sum(\"value\") FROM \"user_login_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "B",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "InfoUser Attempts vs Successes",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT sum(\"value\") FROM \"info_user_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        },
-        {
-          "query": "SELECT sum(\"value\") FROM \"info_user_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "B",
-          "rawQuery": true
-        }
-      ]
     }
   ],
   "refresh": "5s",
