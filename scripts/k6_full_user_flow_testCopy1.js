@@ -19,11 +19,6 @@ const infoUserSuccess = new Counter('info_user_success');
 const infoUserFailures = new Rate('info_user_failures');
 const infoUserDuration = new Trend('info_user_duration');
 
-const newSessionAttempts = new Counter('new_session_attempts');
-const newSessionSuccess = new Counter('new_session_success');
-const newSessionFailures = new Rate('new_session_failures');
-const newSessionDuration = new Trend('new_session_duration');
-
 let usersForLogin = [];
 
 export const options = {
@@ -92,7 +87,6 @@ export function setup() {
   }
 
   usersForLogin = createdUsers;
-  console.log(createdUsers);
   return { users: createdUsers };
 }
 
@@ -146,33 +140,6 @@ export default function (data) {
       infoUserFailures.add(1);
     }
   });
-
-group('NewSession', function () {
-    newSessionAttempts.add(1);
-
-    const newSessionRes = http.post(
-        'https://appservicestest.harvestful.org/app-services-live/newSession',
-        JSON.stringify({
-            token: "vYQRcsGu09saBZyqBpQHa6AfT4ELMFLLYXHuDqFiRKiKP0EkR6GSLsGsR0B2PS1puQaUQZo11ERdENN9KgOncUxOJPxseJBLQVqVCtHVfq7wXhXAP0gZ7YCE0uMftZkd",
-            customerId: 671,
-            userId: 375103
-        }),
-        {
-            headers: {
-                'content-type': 'application/json',
-            }
-        }
-    );
-
-    newSessionDuration.add(newSessionRes.timings.duration);
-
-    if (check(newSessionRes, { 'New Session OK': (r) => r.status === 200 })) {
-        newSessionSuccess.add(1);
-        // Aquí puedes procesar la respuesta si es necesario
-    } else {
-        newSessionFailures.add(1);
-    }
-});
 
   sleep(1);
 }
