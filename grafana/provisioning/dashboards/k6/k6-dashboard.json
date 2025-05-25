@@ -37,7 +37,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 0
       },
       "id": 69,
       "panels": [],
@@ -112,8 +112,8 @@
       "gridPos": {
         "h": 7,
         "w": 6,
-        "x": 6,
-        "y": 3
+        "x": 0,
+        "y": 1
       },
       "id": 17,
       "interval": "1s",
@@ -184,17 +184,282 @@
       "type": "timeseries"
     },
     {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 18,
+      "interval": "1s",
+      "links": [],
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.3.6",
+      "targets": [
+        {
+          "alias": "Concurrent Users",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DEBAPTEAM"
+          },
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "1s"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "vus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time(1s) fill(null)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Concurrent Users (vus)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 0,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 19,
+      "interval": "1s",
+      "links": [],
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.3.6",
+      "targets": [
+        {
+          "alias": "Failed Requests",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DEBAPTEAM"
+          },
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "1s"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "http_req_failed",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time(1s) fill(null)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Failed HTTP Requests",
+      "type": "timeseries"
+    },
+    {
       "collapsed": false,
       "datasource": "M6sBjH1Vk",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 8
       },
       "id": 70,
       "panels": [],
-      "repeat": "Measurement",
       "targets": [
         {
           "datasource": "M6sBjH1Vk",
@@ -329,7 +594,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 9
       },
       "id": 5,
       "interval": ">1s",
@@ -589,7 +854,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 9
       },
       "heatmap": {},
       "height": "250px",
@@ -744,7 +1009,7 @@
         "h": 3,
         "w": 4,
         "x": 0,
-        "y": 18
+        "y": 16
       },
       "id": 12,
       "links": [],
@@ -859,7 +1124,7 @@
         "h": 3,
         "w": 4,
         "x": 4,
-        "y": 18
+        "y": 16
       },
       "id": 16,
       "links": [],
@@ -974,7 +1239,7 @@
         "h": 3,
         "w": 4,
         "x": 8,
-        "y": 18
+        "y": 16
       },
       "id": 15,
       "links": [],
@@ -1080,7 +1345,7 @@
         "h": 3,
         "w": 4,
         "x": 12,
-        "y": 18
+        "y": 16
       },
       "id": 14,
       "links": [],
@@ -1199,7 +1464,7 @@
         "h": 3,
         "w": 4,
         "x": 16,
-        "y": 18
+        "y": 16
       },
       "id": 11,
       "links": [],
@@ -1301,7 +1566,7 @@
         "h": 3,
         "w": 4,
         "x": 20,
-        "y": 18
+        "y": 16
       },
       "id": 13,
       "links": [],
@@ -1715,7 +1980,7 @@
         "h": 23,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 19
       },
       "id": 67,
       "links": [],
@@ -1858,7 +2123,7 @@
         "h": 23,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 42
       },
       "id": 75,
       "libraryPanel": {
@@ -1897,41 +2162,6 @@
             "text": "All",
             "value": "$__all"
           },
-          {
-            "selected": true,
-            "text": "http_req_duration",
-            "value": "http_req_duration"
-          },
-          {
-            "selected": false,
-            "text": "http_req_blocked",
-            "value": "http_req_blocked"
-          },
-          {
-            "selected": false,
-            "text": "http_req_connecting",
-            "value": "http_req_connecting"
-          },
-          {
-            "selected": false,
-            "text": "http_req_looking_up",
-            "value": "http_req_looking_up"
-          },
-          {
-            "selected": false,
-            "text": "http_req_receiving",
-            "value": "http_req_receiving"
-          },
-          {
-            "selected": false,
-            "text": "http_req_sending",
-            "value": "http_req_sending"
-          },
-          {
-            "selected": false,
-            "text": "http_req_waiting",
-            "value": "http_req_waiting"
-          }
         ],
         "query": "http_req_duration,http_req_blocked,http_req_connecting,http_req_looking_up,http_req_receiving,http_req_sending,http_req_waiting",
         "queryValue": "",
