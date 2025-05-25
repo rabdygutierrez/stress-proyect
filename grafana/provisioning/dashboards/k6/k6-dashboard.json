@@ -102,7 +102,77 @@
           "rawQuery": true
         }
       ]
-    }
+    },
+
+
+
+ {
+  "title": "Endpoints Summary",
+  "type": "table",
+  "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 },
+  "datasource": "InfluxDB",
+  "targets": [
+   {
+  "query": "SELECT count(\"value\") AS \"total_requests\", sum(\"value\") AS \"successful_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^2../ GROUP BY \"name\", \"method\"\nSELECT count(\"value\") AS \"failed_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^[4-5]../ GROUP BY \"name\", \"method\"\nSELECT \"name\" AS \"endpoint\", \"method\" FROM \"http_reqs\" WHERE $timeFilter GROUP BY \"name\", \"method\"",
+  "refId": "A",
+  "rawQuery": true,
+  "resultFormat": "table"
+   }
+  ],
+  "options": {
+    "showHeader": true,
+    "sortBy": [
+      {
+        "desc": true,
+        "displayName": "total_requests"
+      }
+    ]
+  },
+  "fieldConfig": {
+    "defaults": {
+      "custom": {
+        "align": "auto",
+        "displayMode": "auto"
+      }
+    },
+    "overrides": [
+      {
+        "matcher": {
+          "id": "byName",
+          "options": "failed_requests"
+        },
+        "properties": [
+          {
+            "id": "color",
+            "value": {
+              "mode": "thresholds",
+              "fixedColor": "red"
+            }
+          }
+        ]
+      },
+      {
+        "matcher": {
+          "id": "byName",
+          "options": "successful_requests"
+        },
+        "properties": [
+          {
+            "id": "color",
+            "value": {
+              "mode": "thresholds",
+              "fixedColor": "green"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
+
+
   ],
   "time": {
     "from": "now-30m",
