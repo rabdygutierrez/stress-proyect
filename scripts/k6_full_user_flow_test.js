@@ -47,49 +47,103 @@ export const options = {
 
 export function setup() {
   const createdUsers = [];
-  const userIdCustomerIdPairs = [];
   const numUsers = 10;
 
   for (let i = 0; i < numUsers; i++) {
     const uniqueId = `${Date.now()}_setup_${i}`;
     const email = `k6_user_${uniqueId}@yopmail.com`;
     const password = 'Test123**';
+    const firstName = `TestFirst${i}`;
+    const lastName = `TestLast${i}`;
+    const phoneNumber = `+1${Math.floor(1000000000 + Math.random() * 9000000000)}`;
 
-    const res = http.post('https://appservicestest.harvestful.org/app-services-home/addUser', JSON.stringify({
-      user: {
-        firstName: `TestFirst${i}`,
-        lastName: `TestLast${i}`,
-        email,
-        password,
-        phoneNumber: `+1${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-        country: 'US',
-        PreferredLanguage: 1,
-        sms: true
+    // 1️⃣ Registrar usuario
+    const registerRes = http.post(
+      'https://appservicestest.harvestful.org/app-services-home/addUser',
+      JSON.stringify({
+        user: {
+          firstName,
+          lastName,
+          email,
+          password,
+          phoneNumber,
+          country: 'US',
+          PreferredLanguage: 1,
+          sms: true
+        }
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': 'https://portaltest.harvestful.org',
+          'Referer': 'https://portaltest.harvestful.org/'
+        }
       }
-    }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'https://portaltest.harvestful.org',
-        'Referer': 'https://portaltest.harvestful.org/'
-      }
-    });
+    );
 
     registerAttempts.add(1);
-    registerDuration.add(res.timings.duration);
+    registerDuration.add(registerRes.timings.duration);
 
-    if (check(res, { 'User registered': (r) => r.status === 200 || r.status === 201 })) {
+    if (check(registerRes, { 'User registered': (r) => r.status === 200 || r.status === 201 })) {
       registerSuccessCounter.add(1);
 
-      const userId = Math.floor(Math.random() * 10000) + 1000; // simulado
-      const customerId = Math.floor(Math.random() * 10000) + 1000; // simulado
+      const userId = Math.floor(Math.random() * 10000) + 1000; // Simulado
+      const customerId = Math.floor(Math.random() * 10000) + 1000; // Simulado
 
+      // 2️⃣ Consumir assistedCCPurchase para obtener el userAccessToken
+      const purchaseRes = http.post(
+        'https://appservicestest.harvestful.org/app-services-home/search/api/assistedCCPurchase',
+        JSON.stringify({
+          token: 'token', // OJO: aquí debes usar el token real si ya lo tienes
+          card: "",
+          name: firstName,
+          lastname: lastName,
+          phone: phoneNumber,
+          email,
+          country: 'US',
+          langid: 1,
+          savePaymentData: false,
+          customer_id: customerId,
+          utm_source: null,
+          utm_medium: null,
+          utm_campaign: null,
+          utm_term: null,
+          utm_content: null
+        }),
+        {
+          headers: {
+            'accept': 'application/json, text/plain, */*',
+            'accept-language': 'es-419,es;q=0.9',
+            'content-type': 'application/json',
+            'origin': 'https://portaltest.harvestful.org',
+            'referer': 'https://portaltest.harvestful.org/',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
+          }
+        }
+      );
+
+      let userAccessToken = '';
+      if (check(purchaseRes, { 'Purchase OK': (r) => r.status === 200 })) {
+        try {
+          const purchaseJson = purchaseRes.json();
+          userAccessToken = purchaseJson.result.authorizationInfo.userAccessToken;
+          console.log(`userAccessToken para ${email}: ${userAccessToken}`);
+        } catch (err) {
+          console.error('Error parseando respuesta de assistedCCPurchase:', err);
+        }
+      } else {
+        console.error(`Fallo assistedCCPurchase para ${email}. Código: ${purchaseRes.status}`);
+      }
+
+      // 3️⃣ Guardar usuario con el userAccessToken obtenido
       createdUsers.push({
         email,
         password,
         userId,
-        customerId
+        customerId,
+        userAccessToken
       });
-      userIdCustomerIdPairs.push({ userId, customerId });
+
     } else {
       registerFailures.add(1);
     }
@@ -161,7 +215,7 @@ export default function (data) {
     const newSessionRes = http.post(
       'https://appservicestest.harvestful.org/app-services-live/newSession',
       JSON.stringify({
-        token: authToken,
+        token: userAccessToken,
         customerId: user.customerId,
         userId: user.userId
       }),
