@@ -3,6 +3,7 @@ import { check, sleep, group } from 'k6';
 import { Counter, Trend, Rate } from 'k6/metrics';
 import { SharedArray } from 'k6/data';
 
+// Métricas personalizadas
 const registerAttempts = new Counter('user_register_attempts');
 const registerSuccessCounter = new Counter('user_register_success');
 const registerFailures = new Rate('user_register_failures');
@@ -23,15 +24,19 @@ const newSessionSuccess = new Counter('new_session_success');
 const newSessionFailures = new Rate('new_session_failures');
 const newSessionDuration = new Trend('new_session_duration');
 
+let usersForLogin = [];
+
 export const options = {
   scenarios: {
-    constant_rate_scenario: {
-      executor: 'constant-arrival-rate',
-      rate: 10, // 10 usuarios por segundo
-      timeUnit: '1s',
-      duration: '10m',
-      preAllocatedVUs: 20,
-      maxVUs: 50
+    concurrency_login_scenario: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        { duration: '5m', target: 10 },
+        { duration: '10m', target: 10 },
+        { duration: '2m', target: 0 }
+      ],
+      gracefulStop: '30s'
     }
   },
   thresholds: {
@@ -47,7 +52,6 @@ export const options = {
 
 export function setup() {
   const createdUsers = [];
-  const userIdCustomerIdPairs = [];
   const numUsers = 10;
 
   for (let i = 0; i < numUsers; i++) {
@@ -79,17 +83,7 @@ export function setup() {
 
     if (check(res, { 'User registered': (r) => r.status === 200 || r.status === 201 })) {
       registerSuccessCounter.add(1);
-
-      const userId = Math.floor(Math.random() * 10000) + 1000; // simulado
-      const customerId = Math.floor(Math.random() * 10000) + 1000; // simulado
-
-      createdUsers.push({
-        email,
-        password,
-        userId,
-        customerId
-      });
-      userIdCustomerIdPairs.push({ userId, customerId });
+      createdUsers.push({ email, password });
     } else {
       registerFailures.add(1);
     }
@@ -97,16 +91,15 @@ export function setup() {
     sleep(0.2);
   }
 
-  console.log('Usuarios creados:');
-  console.log(JSON.stringify(createdUsers, null, 2));
-
+  usersForLogin = createdUsers;
+  console.log(createdUsers);
+  console.log(res);
   return { users: createdUsers };
 }
 
 export default function (data) {
   const users = data.users;
-  const randomIndex = Math.floor(Math.random() * users.length);
-  const user = users[randomIndex];
+  const user = users[(__VU - 1) % users.length];
   let authToken = '';
 
   group('Login', function () {
@@ -155,31 +148,32 @@ export default function (data) {
     }
   });
 
-  group('NewSession', function () {
+group('NewSession', function () {
     newSessionAttempts.add(1);
 
     const newSessionRes = http.post(
-      'https://appservicestest.harvestful.org/app-services-live/newSession',
-      JSON.stringify({
-        token: authToken,
-        customerId: user.customerId,
-        userId: user.userId
-      }),
-      {
-        headers: {
-          'content-type': 'application/json'
+        'https://appservicestest.harvestful.org/app-services-live/newSession',
+        JSON.stringify({
+            token: "vYQRcsGu09saBZyqBpQHa6AfT4ELMFLLYXHuDqFiRKiKP0EkR6GSLsGsR0B2PS1puQaUQZo11ERdENN9KgOncUxOJPxseJBLQVqVCtHVfq7wXhXAP0gZ7YCE0uMftZkd",
+            customerId: 671,
+            userId: 375103
+        }),
+        {
+            headers: {
+                'content-type': 'application/json',
+            }
         }
-      }
     );
 
     newSessionDuration.add(newSessionRes.timings.duration);
 
     if (check(newSessionRes, { 'New Session OK': (r) => r.status === 200 })) {
-      newSessionSuccess.add(1);
+        newSessionSuccess.add(1);
+        // Aquí puedes procesar la respuesta si es necesario
     } else {
-      newSessionFailures.add(1);
+        newSessionFailures.add(1);
     }
-  });
+});
 
   sleep(1);
 }
