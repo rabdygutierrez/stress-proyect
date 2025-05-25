@@ -90,25 +90,13 @@ export function setup() {
       const userId = Math.floor(Math.random() * 10000) + 1000; // Simulado
       const customerId = Math.floor(Math.random() * 10000) + 1000; // Simulado
 
-      // 2️⃣ Consumir assistedCCPurchase para obtener el userAccessToken
-      const purchaseRes = http.post(
-        'https://appservicestest.harvestful.org/app-services-home/search/api/assistedCCPurchase',
+      // 2️⃣ Consumir app-services-live para obtener el userAccessToken
+      const loginRes = http.post(
+        'https://appservicestest.harvestful.org/app-services-live/api/your-login-endpoint', // ¡pon aquí el endpoint correcto!
         JSON.stringify({
-          token: 'token', // OJO: aquí debes usar el token real si ya lo tienes
-          card: "",
-          name: firstName,
-          lastname: lastName,
-          phone: phoneNumber,
+          // payload que espera ese endpoint para iniciar sesión
           email,
-          country: 'US',
-          langid: 1,
-          savePaymentData: false,
-          customer_id: customerId,
-          utm_source: null,
-          utm_medium: null,
-          utm_campaign: null,
-          utm_term: null,
-          utm_content: null
+          password
         }),
         {
           headers: {
@@ -123,16 +111,17 @@ export function setup() {
       );
 
       let userAccessToken = '';
-      if (check(purchaseRes, { 'Purchase OK': (r) => r.status === 200 })) {
+      if (check(loginRes, { 'Login OK': (r) => r.status === 200 })) {
         try {
-          const purchaseJson = purchaseRes.json();
-          userAccessToken = purchaseJson.result.authorizationInfo.userAccessToken;
+          const loginJson = loginRes.json();
+          // Ajusta aquí la ruta correcta según el JSON de respuesta real:
+          userAccessToken = loginJson.result.authorizationInfo.userAccessToken;
           console.log(`userAccessToken para ${email}: ${userAccessToken}`);
         } catch (err) {
-          console.error('Error parseando respuesta de assistedCCPurchase:', err);
+          console.error('Error parseando respuesta de app-services-live:', err);
         }
       } else {
-        console.error(`Fallo assistedCCPurchase para ${email}. Código: ${purchaseRes.status}`);
+        console.error(`Fallo login para ${email}. Código: ${loginRes.status}`);
       }
 
       // 3️⃣ Guardar usuario con el userAccessToken obtenido
@@ -156,6 +145,7 @@ export function setup() {
 
   return { users: createdUsers };
 }
+
 
 export default function (data) {
   const users = data.users;
