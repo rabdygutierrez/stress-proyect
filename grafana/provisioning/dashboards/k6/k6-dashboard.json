@@ -194,6 +194,7 @@
       },
       "id": 70,
       "panels": [],
+      "repeat": "Measurement",
       "targets": [
         {
           "datasource": "M6sBjH1Vk",
@@ -1866,120 +1867,1162 @@
       },
       "title": "Groups and latencies"
     },
-    {
-      "title": "HTTP Request Rate",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "HTTP Request Duration p95",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "HTTP Request Duration p99",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Concurrent Users (vus)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Throughput (req/s)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Failed HTTP Requests",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "Login Attempts vs Successes",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT sum(\"value\") FROM \"user_login_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
+ {
+  "title": "HTTP Request Rate",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
         },
-        {
-          "query": "SELECT sum(\"value\") FROM \"user_login_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "B",
-          "rawQuery": true
-        }
-      ]
-    },
-    {
-      "title": "InfoUser Attempts vs Successes",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
-      "datasource": "${DS_K6INFLUXDB}",
-      "targets": [
-        {
-          "query": "SELECT sum(\"value\") FROM \"info_user_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "rawQuery": true
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
         },
-        {
-          "query": "SELECT sum(\"value\") FROM \"info_user_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "B",
-          "rawQuery": true
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
         }
-      ]
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "short"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "id": 1,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
     }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "HTTP Request Rate",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "http_reqs",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "mean"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+},
+{
+  "title": "HTTP Request Duration p95",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "ms"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 0
+  },
+  "id": 2,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "HTTP Request Duration p95",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "http_req_duration",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [
+              95
+            ],
+            "type": "percentile"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+},
+{
+  "title": "HTTP Request Duration p99",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "ms"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 8
+  },
+  "id": 3,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "HTTP Request Duration p99",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "http_req_duration",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [
+              99
+            ],
+            "type": "percentile"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+},
+{
+  "title": "Concurrent Users (vus)",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "short"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 6,
+    "x": 12,
+    "y": 8
+  },
+  "id": 4,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "Concurrent Users",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "vus",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "last"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+},
+{
+  "title": "Throughput (req/s)",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "short"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 6,
+    "x": 18,
+    "y": 8
+  },
+  "id": 5,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "Throughput",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "http_reqs",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "mean"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+},
+{
+  "title": "Failed HTTP Requests",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "short"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 16
+  },
+  "id": 6,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "Failed Requests",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "http_req_failed",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "sum"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+},
+{
+  "title": "Login Attempts vs Successes",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "short"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 16
+  },
+  "id": 7,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "Login Attempts",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "user_login_attempts",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT sum(\"value\") FROM \"user_login_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "sum"
+          }
+        ]
+      ],
+      "tags": []
+    },
+    {
+      "alias": "Login Successes",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "user_login_success",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT sum(\"value\") FROM \"user_login_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "B",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "sum"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+},
+{
+  "title": "InfoUser Attempts vs Successes",
+  "type": "timeseries",
+  "datasource": {
+    "type": "influxdb",
+    "uid": "P951FEA4DEBAPTEAM"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "line",
+        "fillOpacity": 30,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 0,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "never",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "min": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "unit": "short"
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 24
+  },
+  "id": 8,
+  "interval": "1s",
+  "links": [],
+  "options": {
+    "legend": {
+      "calcs": [
+        "mean",
+        "max"
+      ],
+      "displayMode": "table",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "9.3.6",
+  "targets": [
+    {
+      "alias": "InfoUser Attempts",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "info_user_attempts",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT sum(\"value\") FROM \"info_user_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "sum"
+          }
+        ]
+      ],
+      "tags": []
+    },
+    {
+      "alias": "InfoUser Successes",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        },
+        {
+          "params": [
+            "null"
+          ],
+          "type": "fill"
+        }
+      ],
+      "measurement": "info_user_success",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "query": "SELECT sum(\"value\") FROM \"info_user_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+      "rawQuery": true,
+      "refId": "B",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "value"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "sum"
+          }
+        ]
+      ],
+      "tags": []
+    }
+  ]
+}
   ],
   "refresh": "5s",
   "schemaVersion": 37,
