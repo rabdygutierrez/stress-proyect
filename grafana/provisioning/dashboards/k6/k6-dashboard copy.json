@@ -1,0 +1,181 @@
+{
+  "title": "K6 Load Test Dashboard",
+  "uid": "k6-extended-dashboard",
+  "timezone": "browser",
+  "editable": true,
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": "InfluxDB",
+      "targets": [
+        {
+          "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "HTTP Request Duration p95",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": "InfluxDB",
+      "targets": [
+        {
+          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "HTTP Request Duration p99",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": "InfluxDB",
+      "targets": [
+        {
+          "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Concurrent Users (vus)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "datasource": "InfluxDB",
+      "targets": [
+        {
+          "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Throughput (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "datasource": "InfluxDB",
+      "targets": [
+        {
+          "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Failed HTTP Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": "InfluxDB",
+      "targets": [
+        {
+          "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Login Attempts vs Successes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": "InfluxDB",
+      "targets": [
+        {
+          "query": "SELECT sum(\"value\") FROM \"user_login_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        },
+        {
+          "query": "SELECT sum(\"value\") FROM \"user_login_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "B",
+          "rawQuery": true
+        }
+      ]
+    },
+
+
+
+ {
+  "title": "Endpoints Summary",
+  "type": "table",
+  "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 },
+  "datasource": "InfluxDB",
+  "targets": [
+   {
+  "query": "SELECT count(\"value\") AS \"total_requests\", sum(\"value\") AS \"successful_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^2../ GROUP BY \"name\", \"method\"\nSELECT count(\"value\") AS \"failed_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^[4-5]../ GROUP BY \"name\", \"method\"\nSELECT \"name\" AS \"endpoint\", \"method\" FROM \"http_reqs\" WHERE $timeFilter GROUP BY \"name\", \"method\"",
+  "refId": "A",
+  "rawQuery": true,
+  "resultFormat": "table"
+   }
+  ],
+  "options": {
+    "showHeader": true,
+    "sortBy": [
+      {
+        "desc": true,
+        "displayName": "total_requests"
+      }
+    ]
+  },
+  "fieldConfig": {
+    "defaults": {
+      "custom": {
+        "align": "auto",
+        "displayMode": "auto"
+      }
+    },
+    "overrides": [
+      {
+        "matcher": {
+          "id": "byName",
+          "options": "failed_requests"
+        },
+        "properties": [
+          {
+            "id": "color",
+            "value": {
+              "mode": "thresholds",
+              "fixedColor": "red"
+            }
+          }
+        ]
+      },
+      {
+        "matcher": {
+          "id": "byName",
+          "options": "successful_requests"
+        },
+        "properties": [
+          {
+            "id": "color",
+            "value": {
+              "mode": "thresholds",
+              "fixedColor": "green"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
+
+
+  ],
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  }
+}
