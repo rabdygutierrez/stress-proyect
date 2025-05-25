@@ -227,7 +227,24 @@
           "rawQuery": true
         }
       ]
+    },
+        {
+      "title": "InfoAPI TEST",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 40 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+{
+  "query": "SELECT count(\"value\") AS \"total_requests\", sum(\"value\") AS \"successful_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^2../ GROUP BY \"name\", \"method\"\nSELECT count(\"value\") AS \"failed_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^[4-5]../ GROUP BY \"name\", \"method\"\nSELECT \"name\" AS \"endpoint\", \"method\" FROM \"http_reqs\" WHERE $timeFilter GROUP BY \"name\", \"method\"",
+  "refId": "A",
+  "rawQuery": true,
+  "resultFormat": "table"
+}
+      ]
     }
+
+
+
   ],
   "time": {
     "from": "now-30m",
