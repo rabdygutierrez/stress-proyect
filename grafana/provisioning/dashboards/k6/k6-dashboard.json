@@ -1,4 +1,28 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_K6INFLUXDB",
+      "label": "k6 InfluxDB",
+      "description": "InfluxDB data source for k6 metrics",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.1.6"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "title": "K6 Load Test Dashboard",
   "uid": "k6-extended-dashboard",
   "timezone": "browser",
@@ -11,7 +35,7 @@
       "title": "HTTP Request Rate",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": "InfluxDB",
+      "datasource": "${DS_K6INFLUXDB}",
       "targets": [
         {
           "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
@@ -24,7 +48,7 @@
       "title": "HTTP Request Duration p95",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "datasource": "InfluxDB",
+      "datasource": "${DS_K6INFLUXDB}",
       "targets": [
         {
           "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
@@ -37,7 +61,7 @@
       "title": "HTTP Request Duration p99",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "datasource": "InfluxDB",
+      "datasource": "${DS_K6INFLUXDB}",
       "targets": [
         {
           "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
@@ -50,7 +74,7 @@
       "title": "Concurrent Users (vus)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
-      "datasource": "InfluxDB",
+      "datasource": "${DS_K6INFLUXDB}",
       "targets": [
         {
           "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
@@ -63,7 +87,7 @@
       "title": "Throughput (req/s)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
-      "datasource": "InfluxDB",
+      "datasource": "${DS_K6INFLUXDB}",
       "targets": [
         {
           "query": "SELECT derivative(mean(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
@@ -76,7 +100,7 @@
       "title": "Failed HTTP Requests",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-      "datasource": "InfluxDB",
+      "datasource": "${DS_K6INFLUXDB}",
       "targets": [
         {
           "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
@@ -89,7 +113,7 @@
       "title": "Login Attempts vs Successes",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-      "datasource": "InfluxDB",
+      "datasource": "${DS_K6INFLUXDB}",
       "targets": [
         {
           "query": "SELECT sum(\"value\") FROM \"user_login_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
@@ -103,79 +127,144 @@
         }
       ]
     },
-
-
-
- {
-  "title": "Endpoints Summary",
-  "type": "table",
-  "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 },
-  "datasource": "InfluxDB",
-  "targets": [
-   {
-  "query": "SELECT count(\"value\") AS \"total_requests\", sum(\"value\") AS \"successful_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^2../ GROUP BY \"name\", \"method\"\nSELECT count(\"value\") AS \"failed_requests\" FROM \"http_reqs\" WHERE $timeFilter AND \"status\" =~ /^[4-5]../ GROUP BY \"name\", \"method\"\nSELECT \"name\" AS \"endpoint\", \"method\" FROM \"http_reqs\" WHERE $timeFilter GROUP BY \"name\", \"method\"",
-  "refId": "A",
-  "rawQuery": true,
-  "resultFormat": "table"
-   }
-  ],
-  "options": {
-    "showHeader": true,
-    "sortBy": [
-      {
-        "desc": true,
-        "displayName": "total_requests"
-      }
-    ]
-  },
-  "fieldConfig": {
-    "defaults": {
-      "custom": {
-        "align": "auto",
-        "displayMode": "auto"
-      }
+    {
+      "title": "Register Attempts vs Successes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT sum(\"value\") FROM \"user_register_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        },
+        {
+          "query": "SELECT sum(\"value\") FROM \"user_register_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "B",
+          "rawQuery": true
+        }
+      ]
     },
-    "overrides": [
-      {
-        "matcher": {
-          "id": "byName",
-          "options": "failed_requests"
+    {
+      "title": "InfoUser Attempts vs Successes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT sum(\"value\") FROM \"info_user_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
         },
-        "properties": [
-          {
-            "id": "color",
-            "value": {
-              "mode": "thresholds",
-              "fixedColor": "red"
-            }
-          }
-        ]
-      },
-      {
-        "matcher": {
-          "id": "byName",
-          "options": "successful_requests"
+        {
+          "query": "SELECT sum(\"value\") FROM \"info_user_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "B",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "${Measurement} - Duration Trends (p90, p95, max)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT percentile(\"value\", 90) FROM \"$Measurement\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "legendFormat": "P90",
+          "rawQuery": true
         },
-        "properties": [
-          {
-            "id": "color",
-            "value": {
-              "mode": "thresholds",
-              "fixedColor": "green"
-            }
-          }
-        ]
-      }
-    ]
-  }
-}
-
-
-
-
+        {
+          "query": "SELECT percentile(\"value\", 95) FROM \"$Measurement\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "B",
+          "legendFormat": "P95",
+          "rawQuery": true
+        },
+        {
+          "query": "SELECT max(\"value\") FROM \"$Measurement\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "C",
+          "legendFormat": "Max",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Register Failures Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 40 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT mean(\"value\") FROM \"user_register_failures\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "Login Failures Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 40 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT mean(\"value\") FROM \"user_login_failures\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    },
+    {
+      "title": "InfoUser Failures Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 40 },
+      "datasource": "${DS_K6INFLUXDB}",
+      "targets": [
+        {
+          "query": "SELECT mean(\"value\") FROM \"info_user_failures\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "refId": "A",
+          "rawQuery": true
+        }
+      ]
+    }
   ],
   "time": {
     "from": "now-30m",
     "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "k6 InfluxDB",
+          "value": "k6 InfluxDB"
+        },
+        "hide": 0,
+        "label": "Data Source",
+        "name": "DS_K6INFLUXDB",
+        "options": [],
+        "query": "influxdb",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "http_req_duration",
+          "value": "http_req_duration"
+        },
+        "hide": 0,
+        "label": "Métrica de Duración",
+        "name": "Measurement",
+        "options": [],
+        "query": "SHOW MEASUREMENTS",
+        "refresh": 1,
+        "regex": "/(http_req_duration|register_duration|login_duration|info_user_duration)/",
+        "type": "query"
+      }
+    ]
   }
 }
