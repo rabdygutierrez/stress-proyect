@@ -93,6 +93,7 @@ export function setup() {
 
   usersForLogin = createdUsers;
   console.log(createdUsers);
+  console.log(res);
   return { users: createdUsers };
 }
 
