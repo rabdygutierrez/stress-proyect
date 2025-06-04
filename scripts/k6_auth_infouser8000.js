@@ -11,9 +11,9 @@ const infoUserDuration = new Trend('infoUser_duration');
 const userCount = new Counter('users_tested');
 
 // === CARGA DE DATOS ===
-const users = new SharedArray('usuarios', function () {
-  return JSON.parse(open('./users_10.json')); // Estructura: [{ "email": "...", "password": "..." }, ...]
-});
+const users = new SharedArray('usuarios', () =>
+JSON.parse(open('./users_10.json')).usuarios 
+);
 
 // === CONFIGURACIÓN ===
 export const options = {
