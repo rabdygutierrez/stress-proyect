@@ -29,8 +29,8 @@ export const options = {
 
 // FLUJO PRINCIPAL
 export default function () {
-  const userIndex = (__VU - 1) * 100 + __ITER;
-  const user = users[userIndex];
+const user = users[Math.floor(Math.random() * users.length)];
+
 
   if (!user) {
     console.warn(`No user found at index ${userIndex}`);
