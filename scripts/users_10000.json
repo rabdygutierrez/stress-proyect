@@ -1,4 +1,5 @@
-[
+{
+"usuarios": [
 	{
 		"email" : "testuser_k6_1749068702684_27_565@yopmail.com",
 		"password" : "Test123**"
@@ -39999,4 +40000,4 @@
 		"email" : "testuser_k6_1749068596792_55_385@yopmail.com",
 		"password" : "Test123**"
 	}
-]
+]}
