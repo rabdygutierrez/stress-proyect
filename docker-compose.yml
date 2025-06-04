@@ -44,7 +44,7 @@ services:
       run
       --out influxdb=http://admin:adminpass@influxdb:8086/k6
       -e TYPE_TEST=loadTest
-      /scripts/k6_auth_infouser10.js
+      /scripts/k6_auth_infouser1000.js
     volumes:
       - ./scripts:/scripts
     ports:
