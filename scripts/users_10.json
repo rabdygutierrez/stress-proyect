@@ -1,0 +1,43 @@
+{
+"usuarios": [
+	{
+		"email" : "testuser_k6_1749068702684_27_565@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702675_14_602@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702690_20_586@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702667_97_365@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702681_59_474@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702672_55_485@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702667_30_556@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702672_73_432@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702662_35_530@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "testuser_k6_1749068702600_87_394@yopmail.com",
+		"password" : "Test123**"
+	}
+]}
