@@ -11,10 +11,10 @@ const infoUserDuration = new Trend('infoUser_duration');
 const userCount = new Counter('users_tested');
 
 // CARGA DE USUARIOS
-const users = new SharedArray('usuarios', () =>
-  JSON.parse(open('./users_10.json'))
-);
 
+const users = new SharedArray('usuarios', () =>
+JSON.parse(open('./users_10.json')).usuarios 
+);
 // CONFIGURACIÓN DEL ESCENARIO
 export const options = {
   scenarios: {
