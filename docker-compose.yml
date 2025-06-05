@@ -13,7 +13,14 @@ services:
     volumes: 
     - influxdb_data:/var/lib/influxdb  # Persiste los datos de InfluxDB
  
-# command: removed
+    # === INICIO DE CAMBIO ===
+    # Añadir un command para crear la Retention Policy
+    command: >
+      /bin/sh -c "
+        influx -execute 'CREATE DATABASE k6 WITH DURATION 365d REPLICATION 1 NAME k6_rp_1y' -host influxdb -username admin -password adminpass &&
+        influx -execute 'ALTER RETENTION POLICY autogen ON k6 DURATION 365d' -host influxdb -username admin -password adminpass
+      "
+    # === FIN DE CAMBIO ===
 
 
   grafana:
