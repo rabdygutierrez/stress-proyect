@@ -10,28 +10,30 @@ const infoUserFailures = new Rate('infoUser_failures');
 const infoUserDuration = new Trend('infoUser_duration');
 const purchaseFailures = new Rate('purchase_failures');
 const purchaseDuration = new Trend('purchase_duration');
-const liveAuthFailures = new Rate('live_auth_failures'); // Nueva métrica
-const liveAuthDuration = new Trend('live_auth_duration'); // Nueva métrica
+const liveAuthFailures = new Rate('live_auth_failures');
+const liveAuthDuration = new Trend('live_auth_duration');
 const newSessionFailures = new Rate('newSession_failures');
 const newSessionDuration = new Trend('newSession_duration');
 const userCount = new Counter('users_tested');
 
 // CARGA DE USUARIOS
+// Asegúrate de que './users_10000.json' contenga suficientes usuarios únicos o
+// que la lógica de tu aplicación maneje bien la reutilización de usuarios.
 const users = new SharedArray('usuarios', () =>
   JSON.parse(open('./users_10000.json')).usuarios
 );
 
 // CONFIGURACIÓN DEL ESCENARIO
-//simula 1,000 usuarios concurrentes realizando un flujo de negocio completo 
-// (login, ver perfil, realizar una compra, autenticar y crear una sesión en vivo) 
+// simula 30,000 usuarios concurrentes realizando un flujo de negocio completo
+// (login, ver perfil, realizar una compra, autenticar y crear una sesión en vivo)
 // Se ejecutará por un máximo de 10 minutos y cada usuario intentará el flujo 100 veces.
 export const options = {
   scenarios: {
     user_auth_info_purchase_live_flow: { // Nombre del escenario
       executor: 'per-vu-iterations',
-      vus: 1000,
-      iterations: 100,
-      maxDuration: '10m',
+      vus: 30000, // <--- ¡Ajustado a 30,000 usuarios virtuales!
+      iterations: 100, // Cada VU intenta 100 iteraciones
+      maxDuration: '10m', // Duración máxima de la prueba
     },
   },
   // SE HA ELIMINADO EL BLOQUE 'thresholds' para que la prueba no se detenga por fallos de rendimiento.
@@ -40,10 +42,11 @@ export const options = {
 
 // FLUJO PRINCIPAL
 export default function () {
+  // Selecciona un usuario aleatoriamente del array de usuarios cargado
   const user = users[Math.floor(Math.random() * users.length)];
 
   if (!user) {
-    console.warn(`No se encontró un usuario. Esto no debería ocurrir si el archivo JSON es válido.`);
+    console.warn(`No se encontró un usuario. Esto no debería ocurrir si el archivo JSON es válido y tiene elementos.`);
     return;
   }
 

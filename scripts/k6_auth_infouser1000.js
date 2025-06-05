@@ -16,6 +16,8 @@ const users = new SharedArray('usuarios', () =>
 );
 
 // CONFIGURACIÓN DEL ESCENARIO
+//Usuarios: 1000 usuarios virtuales.
+// Duración: Hasta 10 minutos.
 export const options = {
   scenarios: {
     user_auth_info_flow: {

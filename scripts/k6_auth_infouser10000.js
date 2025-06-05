@@ -12,15 +12,19 @@ const userCount = new Counter('users_tested');
 
 // === CARGA DE DATOS ===
 const users = new SharedArray('usuarios', () =>
-JSON.parse(open('./users_10.json')).usuarios 
+JSON.parse(open('./users_10000.json')).usuarios 
 );
 
 // === CONFIGURACIÓN ===
+// El script ejecuta un máximo de 10,000 ejecuciones completas del flujo de usuario 
+// (100 VUs * 100 iteraciones por VU).
+// Duración: Hasta 10 minutos.
+
 export const options = {
   scenarios: {
     user_auth_info_flow: {
       executor: 'per-vu-iterations',
-      vus: 100,
+      vus: 10000,
       iterations: 100,
       maxDuration: '10m',
     },
