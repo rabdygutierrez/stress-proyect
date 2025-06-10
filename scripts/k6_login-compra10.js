@@ -23,7 +23,7 @@ const users = new SharedArray('usuarios', () =>
 
 // CONFIGURACIÓN PARA PRUEBA RÁPIDA CON 1 USUARIO
 export const options = {
-  vus: 1,
+  vus: 10,
   duration: '2m',
 };
 
