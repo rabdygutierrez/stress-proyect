@@ -10,8 +10,8 @@ const infoUserFailures = new Rate('infoUser_failures');
 const infoUserDuration = new Trend('infoUser_duration');
 const purchaseFailures = new Rate('purchase_failures');
 const purchaseDuration = new Trend('purchase_duration');
-const liveAuthFailures = new Rate('live_auth_failures');
-const liveAuthDuration = new Trend('live_auth_duration');
+const liveAuthFailures = new Rate('live_auth_failures'); // Nueva métrica
+const liveAuthDuration = new Trend('live_auth_duration'); // Nueva métrica
 const newSessionFailures = new Rate('newSession_failures');
 const newSessionDuration = new Trend('newSession_duration');
 const userCount = new Counter('users_tested');
@@ -22,6 +22,9 @@ const users = new SharedArray('usuarios', () =>
 );
 
 // CONFIGURACIÓN DEL ESCENARIO
+//simula 10 usuarios concurrentes realizando un flujo de negocio completo 
+// (login, ver perfil, realizar una compra, autenticar y crear una sesión en vivo) 
+// Se ejecutará por un máximo de 2 horas cada 30seg se suben 10 user
 export const options = {
   scenarios: {
     user_live_event_presence: {
@@ -30,15 +33,65 @@ export const options = {
       stages: [
         { duration: '30s', target: 10 },
         { duration: '30s', target: 20 },
+        { duration: '30s', target: 30 },
+        { duration: '30s', target: 40 },
+        { duration: '30s', target: 50 },
+        { duration: '30s', target: 60 },
+        { duration: '30s', target: 70 },
+        { duration: '30s', target: 80 },
+        { duration: '30s', target: 90 },
+        { duration: '30s', target: 100 },
+        { duration: '30s', target: 110 },
+        { duration: '30s', target: 120 },
+        { duration: '30s', target: 130 },
+        { duration: '30s', target: 140 },
+        { duration: '30s', target: 150 },
+        { duration: '30s', target: 160 },
+        { duration: '30s', target: 170 },
+        { duration: '30s', target: 180 },
+        { duration: '30s', target: 190 },
+        { duration: '30s', target: 200 },
+        { duration: '30s', target: 210 },
+        { duration: '30s', target: 220 },
+        { duration: '30s', target: 230 },
+        { duration: '30s', target: 240 },
+        { duration: '30s', target: 250 },
+        { duration: '30s', target: 260 },
+        { duration: '30s', target: 270 },
+        { duration: '30s', target: 280 },
+        { duration: '30s', target: 290 },
+        { duration: '30s', target: 300 },
+        { duration: '30s', target: 310 },
+        { duration: '30s', target: 320 },
+        { duration: '30s', target: 330 },
+        { duration: '30s', target: 340 },
+        { duration: '30s', target: 350 },
+        { duration: '30s', target: 360 },
+        { duration: '30s', target: 370 },
+        { duration: '30s', target: 380 },
+        { duration: '30s', target: 390 },
+        { duration: '30s', target: 400 },
+        { duration: '30s', target: 410 },
+        { duration: '30s', target: 420 },
+        { duration: '30s', target: 430 },
+        { duration: '30s', target: 440 },
+        { duration: '30s', target: 450 },
+        { duration: '30s', target: 460 },
+        { duration: '30s', target: 470 },
+        { duration: '30s', target: 480 },
+        { duration: '30s', target: 490 },
+        { duration: '30s', target: 500 },
+        { duration: '2h', target: 500 }
       ],
     },
   },
 };
-
+// FLUJO PRINCIPAL
 export default function () {
   const user = users[Math.floor(Math.random() * users.length)];
+
   if (!user) {
-    console.warn(`No se encontró un usuario. Verifica el archivo JSON.`);
+    console.warn(`No se encontró un usuario. Esto no debería ocurrir si el archivo JSON es válido.`);
     return;
   }
 
@@ -51,10 +104,10 @@ export default function () {
   };
 
   let jsessionid;
-  let token;
+  let token; // token de autenticación
   let customerId;
   let userId;
-  let userAccessToken;
+  let userAccessToken; // token obtenido de la compra
 
   group('Authenticate User', () => {
     const authPayload = JSON.stringify({
@@ -78,8 +131,7 @@ export default function () {
 
     if (!ok) {
       authFailures.add(1);
-      console.warn(`==> Autenticación fallida para: ${user.email}`);
-      console.error('Respuesta:', res.body);
+      console.error('Autenticación fallida. Respuesta:', res.body);
       return;
     }
 
@@ -92,7 +144,10 @@ export default function () {
     userCount.add(1);
   });
 
-  if (!jsessionid || !token) return;
+  // Si la autenticación falla, sal del flujo principal
+  if (!jsessionid || !token) {
+    return;
+  }
 
   group('Info User Request', () => {
     const infoRes = http.post(
@@ -166,16 +221,14 @@ export default function () {
     }
   });
 
+  // Si la compra falla o no se obtiene el userAccessToken, sal del flujo
   if (!userAccessToken) {
-    console.warn(`==> userAccessToken NO obtenido para el usuario: ${user.email}`);
     return;
   }
 
   group('Live Auth (before new session)', () => {
-    console.log(`==> Entrando a Live Auth con token: ${token} y JSESSIONID: ${jsessionid}`);
-
     const liveAuthPayload = JSON.stringify({
-      token: token,
+      token: token, // Ahora usa el token ORIGINAL de la autenticación
     });
 
     const liveAuthRes = http.post(
@@ -204,15 +257,13 @@ export default function () {
       liveAuthFailures.add(1);
       console.error('Live Auth fallida. Respuesta:', liveAuthRes.body);
     } else {
-      console.log('Live Auth exitosa. Respuesta:', JSON.stringify(liveAuthRes.json(), null, 2));
+      console.log('Live Auth exitosa. Customer ID:', liveAuthRes.json().result?.customerId);
     }
   });
 
   group('New Session', () => {
-    console.log(`==> Entrando a New Session con userAccessToken: ${userAccessToken}`);
-
     const newSessionPayload = JSON.stringify({
-      token: userAccessToken,
+      token: userAccessToken, // New Session usa el userAccessToken de la compra
       customerId: customerId,
       userId: userId,
     });
@@ -242,7 +293,7 @@ export default function () {
       newSessionFailures.add(1);
       console.error('New Session fallida. Respuesta:', newSessionRes.body);
     } else {
-      console.log('New Session exitosa. Respuesta:', JSON.stringify(newSessionRes.json(), null, 2));
+      console.log('New Session exitosa. privateIP:', newSessionRes.json().result?.privateIP);
     }
   });
 
