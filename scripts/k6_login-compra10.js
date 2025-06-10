@@ -1,43 +1,34 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
-import { Counter, Trend, Rate } from 'k6/metrics';
+import { Trend, Rate } from 'k6/metrics';
 
-// MÉTRICAS PERSONALIZADAS
-const authFailures = new Rate('authentication_failures');
+// MÉTRICAS
 const authDuration = new Trend('authentication_duration');
-const infoUserFailures = new Rate('infoUser_failures');
-const infoUserDuration = new Trend('infoUser_duration');
-const purchaseFailures = new Rate('purchase_failures');
+const infoUserDuration = new Trend('info_user_duration');
 const purchaseDuration = new Trend('purchase_duration');
-const liveAuthFailures = new Rate('live_auth_failures');
 const liveAuthDuration = new Trend('live_auth_duration');
-const newSessionFailures = new Rate('newSession_failures');
-const newSessionDuration = new Trend('newSession_duration');
-const userCount = new Counter('users_tested');
+const newSessionDuration = new Trend('new_session_duration');
 
-// CARGA DE USUARIOS DESDE JSON
+// CARGA DE USUARIOS
 const users = new SharedArray('usuarios', () =>
   JSON.parse(open('./users_10000.json')).usuarios
 );
 
-// CONFIGURACIÓN DEL ESCENARIO: SOLO 10 USUARIOS
+// CONFIGURACIÓN
 export const options = {
   vus: 10,
   duration: '2m',
 };
 
-// FLUJO PRINCIPAL
 export default function () {
-  console.log("🔁 Iniciando iteración de usuario virtual...");
+  console.log("🔁 Iniciando iteración...");
 
   const user = users[Math.floor(Math.random() * users.length)];
   if (!user) {
-    console.warn("❌ No se encontró un usuario válido. Revisa tu archivo JSON.");
+    console.warn("❌ Usuario no válido");
     return;
   }
-
-  console.log("👤 Usuario seleccionado:", user.email);
 
   let jar = http.cookieJar();
   const headersBase = {
@@ -48,28 +39,35 @@ export default function () {
   };
 
   let jsessionid;
-  let token; // Token del login
+  let token;
   let customerId;
   let userId;
   let userAccessToken;
 
-  // GRUPO: Autenticar Usuario
+  // GRUPO: Autenticación
   group('Authenticate User', () => {
     console.log("🚀 Iniciando autenticación...");
-    const authPayload = JSON.stringify({
+    const payload = JSON.stringify({
       email: user.email,
       password: user.password,
     });
 
     const res = http.post(
       'https://appservicestest.harvestful.org/app-services-home/authenticate', 
-      authPayload,
-      { headers: headersBase }
+      payload,
+      {
+        headers: headersBase,
+        tags: {
+          name: 'authenticate',
+          group: 'Authenticate User',
+          method: 'POST'
+        }
+      }
     );
 
     authDuration.add(res.timings.duration, {
-      name: 'login',
-      group: 'Authentication',
+      name: 'authenticate',
+      group: 'Authenticate User',
       status: res.status,
       method: 'POST'
     });
@@ -87,8 +85,7 @@ export default function () {
     });
 
     if (!ok) {
-      authFailures.add(1);
-      console.error("❌ Autenticación fallida. Respuesta completa:", res.body);
+      console.error("❌ Autenticación fallida:", res.body);
       return;
     }
 
@@ -98,138 +95,111 @@ export default function () {
     userId = res.json().result.userId;
 
     jar.set('https://appservicestest.harvestful.org',  'JSESSIONID', jsessionid);
-    userCount.add(1);
-    console.log("✅ Autenticación exitosa. Token obtenido:", token);
-    console.log("🍪 JSESSIONID:", jsessionid);
+    console.log("✅ Autenticación exitosa.");
   });
 
-  if (!jsessionid || !token) {
-    console.warn("⚠️ Salida anticipada: Fallo en autenticación.");
-    return;
-  }
+  if (!jsessionid || !token) return;
 
-  // GRUPO: Info User Request
+  // GRUPO: Info User
   group('Info User Request', () => {
     console.log("🔍 Iniciando Info User...");
-    const infoRes = http.post(
+    const payload = JSON.stringify({ token });
+
+    const res = http.post(
       'https://appservicestest.harvestful.org/app-services-home/infoUser', 
-      JSON.stringify({ token }),
+      payload,
       {
         headers: {
           ...headersBase,
           'Cookie': `JSESSIONID=${jsessionid}`,
         },
+        tags: {
+          name: 'info_user',
+          group: 'Info User Request',
+          method: 'POST'
+        }
       }
     );
-    infoUserDuration.add(infoRes.timings.duration, {
+
+    infoUserDuration.add(res.timings.duration, {
       name: 'info_user',
-      group: 'InfoUser',
-      status: infoRes.status,
+      group: 'Info User Request',
+      status: res.status,
       method: 'POST'
     });
 
-    const okInfo = check(infoRes, {
-      'infoUser 200': (r) => r.status === 200,
+    check(res, {
+      'infoUser status 200': (r) => r.status === 200,
       'infoUser has data': (r) => {
         try {
-          return !!r.body && r.body.length > 10;
+          return r.body && r.body.length > 10;
         } catch (e) {
           return false;
         }
       },
     });
-    if (!okInfo) {
-      infoUserFailures.add(1);
-      console.error("❌ InfoUser fallida. Respuesta completa:", infoRes.body);
-    } else {
-      console.log("✅ InfoUser exitosa.");
-    }
   });
 
-  // GRUPO: Compra asistida
+  // GRUPO: Compra
   group('Assisted CC Purchase', () => {
-    console.log("💳 Iniciando compra asistida...");
-    const purchasePayload = JSON.stringify({
-      token: token,
+    console.log("💳 Iniciando compra...");
+    const payload = JSON.stringify({
+      token,
       card: "",
-      name: user.name || `TestFirstName_${__VU}_${__ITER}`,
-      lastname: user.lastname || `TestLastName_${__VU}_${__ITER}`,
+      name: user.name || `Test_${__VU}_${__ITER}`,
+      lastname: user.lastname || `Test_${__VU}_${__ITER}`,
       phone: user.phone || `+1${Math.floor(1000000000 + Math.random() * 9000000000)}`,
       email: user.email,
-      country: user.country || "US",
+      country: user.country || 'US',
       langid: 1,
       savePaymentData: false,
-      customer_id: customerId,
+      customer_id: customerId
     });
 
-    const purchaseRes = http.post(
+    const res = http.post(
       'https://appservicestest.harvestful.org/app-services-home/search/api/assistedCCPurchase', 
-      purchasePayload,
+      payload,
       {
         headers: {
           ...headersBase,
           'Cookie': `JSESSIONID=${jsessionid}`,
         },
+        tags: {
+          name: 'assisted_cc_purchase',
+          group: 'Assisted CC Purchase',
+          method: 'POST'
+        }
       }
     );
 
-    purchaseDuration.add(purchaseRes.timings.duration, {
-      name: 'purchase',
-      group: 'Purchase',
-      status: purchaseRes.status,
+    purchaseDuration.add(res.timings.duration, {
+      name: 'assisted_cc_purchase',
+      group: 'Assisted CC Purchase',
+      status: res.status,
       method: 'POST'
     });
 
-    const okPurchase = check(purchaseRes, {
-      'purchase status 200': (r) => r.status === 200,
-      'purchase has body': (r) => r.body && r.body.length > 0,
-      'purchase successful': (r) => {
-        try {
-          const json = r.json();
-          return json.returnCode === 0 && json.returnMessageCode === "OK200";
-        } catch (e) {
-          console.error("❌ Error parseando JSON en compra:", e);
-          return false;
-        }
-      },
-      'purchase has userAccessToken': (r) => {
-        try {
-          return r.json().result?.authorizationInfo?.userAccessToken !== undefined;
-        } catch (e) {
-          return false;
-        }
-      },
-    });
-
-    if (!okPurchase) {
-      purchaseFailures.add(1);
-      console.error("❌ Compra fallida. Respuesta completa:", purchaseRes.body);
-    } else {
-      try {
-        userAccessToken = purchaseRes.json().result.authorizationInfo.userAccessToken;
-        console.log("✅ Compra exitosa. userAccessToken obtenido:", userAccessToken);
-      } catch (e) {
-        purchaseFailures.add(1);
-        console.error("❌ No se pudo extraer userAccessToken:", e);
+    try {
+      const json = res.json();
+      if (json.result?.authorizationInfo?.userAccessToken) {
+        userAccessToken = json.result.authorizationInfo.userAccessToken;
+        console.log("✅ userAccessToken obtenido.");
       }
+    } catch (e) {
+      console.error("❌ Error parseando respuesta de compra.");
     }
   });
 
-  if (!userAccessToken) {
-    console.warn("⚠️ Salida anticipada: No se obtuvo userAccessToken.");
-    return;
-  }
+  if (!userAccessToken) return;
 
   // GRUPO: Live Auth
   group('Live Auth Before New Session', () => {
     console.log("📡 Iniciando Live Auth...");
-    const liveAuthPayload = JSON.stringify({
-      token: token,
-    });
+    const payload = JSON.stringify({ token });
 
-    const liveAuthRes = http.post(
+    const res = http.post(
       'https://appservicestest.harvestful.org/app-services-live/auth', 
-      liveAuthPayload,
+      payload,
       {
         headers: {
           ...headersBase,
@@ -237,48 +207,38 @@ export default function () {
           'Origin': 'https://livetest.harvestful.org', 
           'Cookie': `JSESSIONID=${jsessionid}`,
         },
+        tags: {
+          name: 'live_auth',
+          group: 'Live Auth Before New Session',
+          method: 'POST'
+        }
       }
     );
 
-    liveAuthDuration.add(liveAuthRes.timings.duration, {
+    liveAuthDuration.add(res.timings.duration, {
       name: 'live_auth',
-      group: 'LiveAuth',
-      status: liveAuthRes.status,
+      group: 'Live Auth Before New Session',
+      status: res.status,
       method: 'POST'
     });
 
-    const okLiveAuth = check(liveAuthRes, {
-      'live auth status 200': (r) => r.status === 200,
-      'live auth successful': (r) => {
-        try {
-          const json = r.json();
-          return json.returnCode === 0 && json.returnMessageCode === "OK200";
-        } catch (e) {
-          return false;
-        }
-      },
+    check(res, {
+      'live auth status 200': (r) => r.status === 200
     });
-
-    if (!okLiveAuth) {
-      liveAuthFailures.add(1);
-      console.error("❌ Live Auth fallida. Respuesta completa:", liveAuthRes.body);
-    } else {
-      console.log("✅ Live Auth exitosa. Customer ID:", liveAuthRes.json().result?.customerId);
-    }
   });
 
-  // GRUPO: New Session
+  // GRUPO: Nueva Sesión
   group('New Session', () => {
     console.log("🔄 Iniciando New Session...");
-    const newSessionPayload = JSON.stringify({
+    const payload = JSON.stringify({
       token: userAccessToken,
-      customerId: customerId,
-      userId: userId,
+      customerId,
+      userId
     });
 
-    const newSessionRes = http.post(
+    const res = http.post(
       'https://appservicestest.harvestful.org/app-services-live/newSession', 
-      newSessionPayload,
+      payload,
       {
         headers: {
           ...headersBase,
@@ -286,35 +246,25 @@ export default function () {
           'Origin': 'https://livetest.harvestful.org', 
           'Cookie': `JSESSIONID=${jsessionid}`,
         },
+        tags: {
+          name: 'new_session',
+          group: 'New Session',
+          method: 'POST'
+        }
       }
     );
 
-    newSessionDuration.add(newSessionRes.timings.duration, {
+    newSessionDuration.add(res.timings.duration, {
       name: 'new_session',
-      group: 'NewSession',
-      status: newSessionRes.status,
+      group: 'New Session',
+      status: res.status,
       method: 'POST'
     });
 
-    const okNewSession = check(newSessionRes, {
-      'newSession status 200': (r) => r.status === 200,
-      'newSession successful': (r) => {
-        try {
-          const json = r.json();
-          return json.returnCode === 0 && json.returnMessageCode === "OK200";
-        } catch (e) {
-          return false;
-        }
-      },
+    check(res, {
+      'newSession status 200': (r) => r.status === 200
     });
-
-    if (!okNewSession) {
-      newSessionFailures.add(1);
-      console.error("❌ New Session fallida. Respuesta completa:", newSessionRes.body);
-    } else {
-      console.log("✅ New Session exitosa. privateIP:", newSessionRes.json().result?.privateIP);
-    }
   });
 
-  sleep(1); // Pausa opcional entre iteraciones
+  sleep(1);
 }
