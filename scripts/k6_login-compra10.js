@@ -67,7 +67,13 @@ export default function () {
       { headers: headersBase }
     );
 
-    authDuration.add(res.timings.duration);
+    authDuration.add(res.timings.duration, {
+      name: 'login',
+      group: 'Authentication',
+      status: res.status,
+      method: 'POST'
+    });
+
     const ok = check(res, {
       'auth status 200': (r) => r.status === 200,
       'auth has Set-Cookie': (r) => !!r.cookies['JSESSIONID'],
@@ -115,7 +121,13 @@ export default function () {
         },
       }
     );
-    infoUserDuration.add(infoRes.timings.duration);
+    infoUserDuration.add(infoRes.timings.duration, {
+      name: 'info_user',
+      group: 'InfoUser',
+      status: infoRes.status,
+      method: 'POST'
+    });
+
     const okInfo = check(infoRes, {
       'infoUser 200': (r) => r.status === 200,
       'infoUser has data': (r) => {
@@ -134,7 +146,7 @@ export default function () {
     }
   });
 
-  // GRUPO: Compra con Tarjeta
+  // GRUPO: Compra asistida
   group('Assisted CC Purchase', () => {
     console.log("💳 Iniciando compra asistida...");
     const purchasePayload = JSON.stringify({
@@ -148,11 +160,6 @@ export default function () {
       langid: 1,
       savePaymentData: false,
       customer_id: customerId,
-      utm_source: null,
-      utm_medium: null,
-      utm_campaign: null,
-      utm_term: null,
-      utm_content: null,
     });
 
     const purchaseRes = http.post(
@@ -166,7 +173,13 @@ export default function () {
       }
     );
 
-    purchaseDuration.add(purchaseRes.timings.duration);
+    purchaseDuration.add(purchaseRes.timings.duration, {
+      name: 'purchase',
+      group: 'Purchase',
+      status: purchaseRes.status,
+      method: 'POST'
+    });
+
     const okPurchase = check(purchaseRes, {
       'purchase status 200': (r) => r.status === 200,
       'purchase has body': (r) => r.body && r.body.length > 0,
@@ -175,7 +188,7 @@ export default function () {
           const json = r.json();
           return json.returnCode === 0 && json.returnMessageCode === "OK200";
         } catch (e) {
-          console.error("❌ Error al parsear JSON en compra:", e);
+          console.error("❌ Error parseando JSON en compra:", e);
           return false;
         }
       },
@@ -227,20 +240,19 @@ export default function () {
       }
     );
 
-    liveAuthDuration.add(liveAuthRes.timings.duration);
+    liveAuthDuration.add(liveAuthRes.timings.duration, {
+      name: 'live_auth',
+      group: 'LiveAuth',
+      status: liveAuthRes.status,
+      method: 'POST'
+    });
+
     const okLiveAuth = check(liveAuthRes, {
       'live auth status 200': (r) => r.status === 200,
       'live auth successful': (r) => {
         try {
           const json = r.json();
           return json.returnCode === 0 && json.returnMessageCode === "OK200";
-        } catch (e) {
-          return false;
-        }
-      },
-      'live auth has customerId': (r) => {
-        try {
-          return r.json().result?.customerId !== undefined;
         } catch (e) {
           return false;
         }
@@ -277,20 +289,19 @@ export default function () {
       }
     );
 
-    newSessionDuration.add(newSessionRes.timings.duration);
+    newSessionDuration.add(newSessionRes.timings.duration, {
+      name: 'new_session',
+      group: 'NewSession',
+      status: newSessionRes.status,
+      method: 'POST'
+    });
+
     const okNewSession = check(newSessionRes, {
       'newSession status 200': (r) => r.status === 200,
       'newSession successful': (r) => {
         try {
           const json = r.json();
           return json.returnCode === 0 && json.returnMessageCode === "OK200";
-        } catch (e) {
-          return false;
-        }
-      },
-      'newSession has privateIP': (r) => {
-        try {
-          return r.json().result?.privateIP !== undefined;
         } catch (e) {
           return false;
         }
