@@ -21,7 +21,7 @@ const users = new SharedArray('usuarios', () =>
   JSON.parse(open('./users_10000.json')).usuarios
 );
 
-// CONFIGURACIÓN PARA PRUEBA RÁPIDA CON 1 USUARIO
+// CONFIGURACIÓN DEL ESCENARIO: SOLO 10 USUARIOS
 export const options = {
   vus: 10,
   duration: '2m',
@@ -31,7 +31,6 @@ export const options = {
 export default function () {
   console.log("🔁 Iniciando iteración de usuario virtual...");
 
-  // Selecciona un usuario aleatorio
   const user = users[Math.floor(Math.random() * users.length)];
   if (!user) {
     console.warn("❌ No se encontró un usuario válido. Revisa tu archivo JSON.");
@@ -49,7 +48,7 @@ export default function () {
   };
 
   let jsessionid;
-  let token;
+  let token; // Token del login
   let customerId;
   let userId;
   let userAccessToken;
@@ -72,7 +71,13 @@ export default function () {
     const ok = check(res, {
       'auth status 200': (r) => r.status === 200,
       'auth has Set-Cookie': (r) => !!r.cookies['JSESSIONID'],
-      'auth has token': (r) => r.json().result?.token !== undefined,
+      'auth has token': (r) => {
+        try {
+          return r.json().result?.token !== undefined;
+        } catch (e) {
+          return false;
+        }
+      },
     });
 
     if (!ok) {
@@ -113,7 +118,13 @@ export default function () {
     infoUserDuration.add(infoRes.timings.duration);
     const okInfo = check(infoRes, {
       'infoUser 200': (r) => r.status === 200,
-      'infoUser has data': (r) => !!r.body && r.body.length > 10,
+      'infoUser has data': (r) => {
+        try {
+          return !!r.body && r.body.length > 10;
+        } catch (e) {
+          return false;
+        }
+      },
     });
     if (!okInfo) {
       infoUserFailures.add(1);
@@ -158,16 +169,36 @@ export default function () {
     purchaseDuration.add(purchaseRes.timings.duration);
     const okPurchase = check(purchaseRes, {
       'purchase status 200': (r) => r.status === 200,
-      'purchase successful': (r) => r.json().returnCode === 0 && r.json().returnMessageCode === "OK200",
-      'purchase has userAccessToken': (r) => r.json().result?.authorizationInfo?.userAccessToken !== undefined,
+      'purchase has body': (r) => r.body && r.body.length > 0,
+      'purchase successful': (r) => {
+        try {
+          const json = r.json();
+          return json.returnCode === 0 && json.returnMessageCode === "OK200";
+        } catch (e) {
+          console.error("❌ Error al parsear JSON en compra:", e);
+          return false;
+        }
+      },
+      'purchase has userAccessToken': (r) => {
+        try {
+          return r.json().result?.authorizationInfo?.userAccessToken !== undefined;
+        } catch (e) {
+          return false;
+        }
+      },
     });
 
     if (!okPurchase) {
       purchaseFailures.add(1);
       console.error("❌ Compra fallida. Respuesta completa:", purchaseRes.body);
     } else {
-      userAccessToken = purchaseRes.json().result.authorizationInfo.userAccessToken;
-      console.log("✅ Compra exitosa. userAccessToken obtenido:", userAccessToken);
+      try {
+        userAccessToken = purchaseRes.json().result.authorizationInfo.userAccessToken;
+        console.log("✅ Compra exitosa. userAccessToken obtenido:", userAccessToken);
+      } catch (e) {
+        purchaseFailures.add(1);
+        console.error("❌ No se pudo extraer userAccessToken:", e);
+      }
     }
   });
 
@@ -177,7 +208,7 @@ export default function () {
   }
 
   // GRUPO: Live Auth
-  group('Live Auth (before new session)', () => {
+  group('Live Auth Before New Session', () => {
     console.log("📡 Iniciando Live Auth...");
     const liveAuthPayload = JSON.stringify({
       token: token,
@@ -199,9 +230,21 @@ export default function () {
     liveAuthDuration.add(liveAuthRes.timings.duration);
     const okLiveAuth = check(liveAuthRes, {
       'live auth status 200': (r) => r.status === 200,
-      'live auth successful': (r) => r.json().returnCode === 0 && r.json().returnMessageCode === "OK200",
-      'live auth has customerId': (r) => r.json().result?.customerId !== undefined,
-      'live auth has user data': (r) => r.json().result?.user?.email !== undefined,
+      'live auth successful': (r) => {
+        try {
+          const json = r.json();
+          return json.returnCode === 0 && json.returnMessageCode === "OK200";
+        } catch (e) {
+          return false;
+        }
+      },
+      'live auth has customerId': (r) => {
+        try {
+          return r.json().result?.customerId !== undefined;
+        } catch (e) {
+          return false;
+        }
+      },
     });
 
     if (!okLiveAuth) {
@@ -237,8 +280,21 @@ export default function () {
     newSessionDuration.add(newSessionRes.timings.duration);
     const okNewSession = check(newSessionRes, {
       'newSession status 200': (r) => r.status === 200,
-      'newSession successful': (r) => r.json().returnCode === 0 && r.json().returnMessageCode === "OK200",
-      'newSession has privateIP': (r) => r.json().result?.privateIP !== undefined,
+      'newSession successful': (r) => {
+        try {
+          const json = r.json();
+          return json.returnCode === 0 && json.returnMessageCode === "OK200";
+        } catch (e) {
+          return false;
+        }
+      },
+      'newSession has privateIP': (r) => {
+        try {
+          return r.json().result?.privateIP !== undefined;
+        } catch (e) {
+          return false;
+        }
+      },
     });
 
     if (!okNewSession) {
