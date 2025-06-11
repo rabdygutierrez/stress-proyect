@@ -84,6 +84,33 @@ export default function () {
   console.log(`🆔 Customer ID: ${customerId}`);
 
   sleep(1);
+// --- getUserAccessToken ---
+  const accessTokenPayload = JSON.stringify({ token, customer_id: customerId });
+
+  let accessTokenRes = http.post(
+    'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',
+    accessTokenPayload,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'X-Private-IP': privateIP,
+      },
+    }
+  );
+  getUserAccessTokenDuration.add(accessTokenRes.timings.duration);
+
+  check(accessTokenRes, {
+    'getUserAccessToken status 200': (r) => r.status === 200,
+  });
+
+  if (accessTokenRes.status !== 200) {
+    console.error(`❌ getUserAccessToken falló con status ${accessTokenRes.status}`);
+    return;
+  }
+  console.log('🔑 getUserAccessToken exitoso');
+
+  sleep(1);
 
  
 
