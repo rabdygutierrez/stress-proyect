@@ -86,7 +86,16 @@ export default function () {
   }
 
   console.log(`🆔 Customer ID: ${customerId}`);
+  
+ if (!userId) {
+    console.error('❌ No se encontró userId en infoUser');
+    return;
+  }
 
+  console.log(`🆔 Customer ID: ${customerId}`);
+  console.log(`👤 User ID: ${userId}`);
+
+  sleep(1);
   sleep(1);
 
   // --- getUserAccessToken ---
@@ -151,6 +160,38 @@ export default function () {
   }
 
   console.log('🎥 liveSession exitoso');
+  sleep(1);
+  // --- newSession ---
+  const newSessionPayload = JSON.stringify({
+    token,
+    customer_id: customerId,
+    user_id: userId,
+  });
+
+  let newSessionRes = http.post(
+    'https://appservicestest.harvestful.org/app-services-home/newSession',
+    newSessionPayload,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'X-Private-IP': privateIP,
+        'Cookie': `JSESSIONID=${jsessionId}`,
+      },
+    }
+  );
+  newSessionDuration.add(newSessionRes.timings.duration);
+
+  check(newSessionRes, {
+    'newSession status 200': (r) => r.status === 200,
+  });
+
+  if (newSessionRes.status !== 200) {
+    console.error(`❌ newSession falló con status ${newSessionRes.status}`);
+    return;
+  }
+
+  console.log('🆕 newSession exitoso');
   sleep(1);
 
 }
