@@ -90,7 +90,10 @@ export default function () {
   sleep(1);
 
   // --- getUserAccessToken ---
-  const accessTokenPayload = JSON.stringify({ token, customer_id: customerId });
+  const accessTokenPayload = JSON.stringify({
+    email: 'v1901@mailinator.com',
+    customer_id: customerId,
+  });
 
   let accessTokenRes = http.post(
     'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',
