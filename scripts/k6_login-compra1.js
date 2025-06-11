@@ -20,7 +20,11 @@ const newSessionFailures = new Rate('newSession_failures');
 const users = new SharedArray('usuarios', () => {
   return JSON.parse(open('./users_10000.json')).usuarios;
 });
-
+// CONFIGURACIÓN
+export const options = {
+  vus: 10,
+  duration: '2m',
+};
 // CONFIGURACIÓN DEL ESCENARIO - SOLO 10 USUARIOS
 export default function () {
   console.log("🔁 Iniciando iteración...");
