@@ -45,7 +45,7 @@ export default function () {
     'Content-Type': 'application/json',
     'Origin': 'https://portaltest.harvestful.org', 
     'Referer': 'https://portaltest.harvestful.org/', 
-    'User-Agent': 'Mozilla/5.0',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
   };
 
   // === AUTENTICACIÓN (1) ===
@@ -91,143 +91,137 @@ export default function () {
     sessionToken = json.result.token;
     jsessionid = res.cookies['JSESSIONID']?.[0]?.value || '';
 
-    console.log("✅ Autenticación OK. Token:", sessionToken);
+    console.log("✅ Autenticación OK. sessionToken:", sessionToken);
     console.log("🍪 JSESSIONID obtenida:", jsessionid);
   });
 
   // === OBTENER INFO DEL USUARIO (2) ===
-group('2. Info User - /infoUser', () => {
-  console.log("🧾 Obteniendo información del usuario...");
+  group('2. Info User - /infoUser', () => {
+    console.log("🧾 Obteniendo información del usuario...");
 
-  if (!jsessionid || !sessionToken) {
-    infoUserFailures.add(1);
-    console.error("❌ Faltan datos previos para /infoUser", {
-      jsessionid: jsessionid ? '[SET]' : '[vacio]',
-      sessionToken: sessionToken ? '[SET]' : '[vacio]'
+    if (!jsessionid || !sessionToken) {
+      infoUserFailures.add(1);
+      console.error("❌ Faltan datos previos para /infoUser", {
+        jsessionid: jsessionid ? '[SET]' : '[MISSING]',
+        sessionToken: sessionToken ? '[SET]' : '[MISSING]'
+      });
+      return;
+    }
+
+    const payload = JSON.stringify({ token: sessionToken }); // ✅ Usa sessionToken
+
+    const res = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser',  payload, {
+      headers: {
+        ...headersBase,
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'cookie': `JSESSIONID=${jsessionid}`,
+        'origin': 'https://portaltest.harvestful.org', 
+        'referer': 'https://portaltest.harvestful.org/' 
+      },
     });
-    return;
-  }
 
-  const payload = JSON.stringify({ token: sessionToken }); // ✅ Se envía token
+    infoUserDuration.add(res.timings.duration);
 
-  const res = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser',  payload, {
-    headers: {
-      ...headersBase,
-      'accept': 'application/json, text/plain, */*',
-      'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-      'credentials': 'include',
-      'origin': 'https://portaltest.harvestful.org', 
-      'referer': 'https://portaltest.harvestful.org/', 
-      'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"Windows"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-site',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      'Cookie': `JSESSIONID=${jsessionid}`
-    },
+    console.log(`🔹 Status InfoUser: ${res.status}`);
+    if (res.status !== 200) {
+      infoUserFailures.add(1);
+      console.error("❌ Error HTTP en /infoUser:", res.status);
+      return;
+    }
+
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      infoUserFailures.add(1);
+      console.error("❌ Respuesta no es JSON en /infoUser");
+      return;
+    }
+
+    const ok = check(json, {
+      'User info has userId and email': (j) => !!j.result?.user?.id && !!j.result?.user?.email,
+    });
+
+    if (!ok) {
+      infoUserFailures.add(1);
+      console.error("❌ Datos incompletos en /infoUser", json);
+      return;
+    }
+
+    userInfo = json.result;
+    userId = json.result.user.id;
+    userEmail = json.result.user.email;
+
+    console.log("✅ Información del usuario obtenida:");
+    console.log(`   userId: ${userId}`);
+    console.log(`   email: ${userEmail}`);
+    console.log(`   customerId: ${customerId}`);
   });
-
-  infoUserDuration.add(res.timings.duration);
-
-  console.log(`🔹 Status InfoUser: ${res.status}`);
-  if (res.status !== 200) {
-    infoUserFailures.add(1);
-    console.error("❌ Error HTTP en /infoUser:", res.status);
-    return;
-  }
-
-  let json;
-  try {
-    json = res.json();
-  } catch (e) {
-    infoUserFailures.add(1);
-    console.error("❌ Respuesta no es JSON en /infoUser");
-    return;
-  }
-
-  const ok = check(json, {
-    'User info has userId and email': (j) => !!j.result?.user?.id && !!j.result?.user?.email,
-  });
-
-  if (!ok) {
-    infoUserFailures.add(1);
-    console.error("❌ Datos incompletos en /infoUser", json);
-    return;
-  }
-
-  userInfo = json.result;
-  userId = json.result.user.id;
-  userEmail = json.result.user.email;
-
-  console.log("✅ Información del usuario obtenida:");
-  console.log(`   userId: ${userId}`);
-  console.log(`   email: ${userEmail}`);
-  console.log(`   customerId: ${customerId}`);
-});
 
   // === OBTENER USER ACCESS TOKEN (3) ===
-group('3. Get User Access Token - /getUserAccessToken', () => {
-  console.log("🔑 Solicitando User Access Token...");
+  group('3. Get User Access Token - /getUserAccessToken', () => {
+    console.log("🔑 Solicitando User Access Token...");
 
-  // ✅ Validación previa
-  if (!sessionToken || !userEmail || !customerId) {
-    accessTokenFailures.add(1);
-    console.error("❌ Datos faltantes para /getUserAccessToken", {
-      sessionToken: sessionToken ? '[SET]' : '[MISSING]',
-      userEmail: userEmail ? `[${userEmail}]` : '[MISSING]',
-      customerId: `[${customerId}]`
+    if (!sessionToken || !userEmail || !customerId) {
+      accessTokenFailures.add(1);
+      console.error("❌ Datos faltantes para /getUserAccessToken", {
+        sessionToken: sessionToken ? '[SET]' : '[MISSING]',
+        userEmail: userEmail ? `[${userEmail}]` : '[MISSING]',
+        customerId: `[${customerId}]`
+      });
+      return;
+    }
+
+    const payload = JSON.stringify({
+      token: sessionToken,     // ✅ Viene de /authenticate
+      customerId: customerId, // ✅ Fijo como 671
+      email: userEmail        // ✅ Viene de /infoUser
     });
-    return;
-  }
 
-  const payload = JSON.stringify({
-    token: sessionToken,
-    customerId: customerId,
-    email: userEmail, // ✅ Este campo es obligatorio según el error del servidor
+    const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
+      headers: {
+        ...headersBase,
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'cookie': `JSESSIONID=${jsessionid}`,
+        'origin': 'https://portaltest.harvestful.org', 
+        'referer': 'https://portaltest.harvestful.org/', 
+      },
+    });
+
+    accessTokenDuration.add(res.timings.duration);
+
+    console.log(`🔹 Status getUserAccessToken: ${res.status}`);
+    if (res.status !== 200) {
+      accessTokenFailures.add(1);
+      console.error("❌ Error HTTP en /getUserAccessToken:", res.status);
+      return;
+    }
+
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      accessTokenFailures.add(1);
+      console.error("❌ Respuesta no es JSON en /getUserAccessToken");
+      return;
+    }
+
+    const ok = check(json, {
+      'User access token received': (j) => !!j.result?.user_access_token,
+    });
+
+    if (!ok) {
+      accessTokenFailures.add(1);
+      console.error("❌ Token no encontrado en /getUserAccessToken", json);
+      return;
+    }
+
+    userAccessToken = json.result.user_access_token;
+    console.log("✅ User Access Token recibido:", userAccessToken);
   });
 
-  const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
-    headers: {
-      ...headersBase,
-      'accept': 'application/json',
-      'content-type': 'application/json',
-      'cookie': `JSESSIONID=${jsessionid}`,
-    },
-  });
-
-  accessTokenDuration.add(res.timings.duration);
-
-  console.log(`🔹 Status getUserAccessToken: ${res.status}`);
-  if (res.status !== 200) {
-    accessTokenFailures.add(1);
-    console.error("❌ Error HTTP en /getUserAccessToken:", res.status);
-    return;
-  }
-
-  let json;
-  try {
-    json = res.json();
-  } catch (e) {
-    accessTokenFailures.add(1);
-    console.error("❌ Respuesta no es JSON en /getUserAccessToken");
-    return;
-  }
-
-  const ok = check(json, {
-    'User access token received': (j) => !!j.result?.user_access_token,
-  });
-
-  if (!ok) {
-    accessTokenFailures.add(1);
-    console.error("❌ Token no encontrado en /getUserAccessToken", json);
-    return;
-  }
-
-  userAccessToken = json.result.user_access_token;
-  console.log("✅ User Access Token recibido:", userAccessToken);
-});
   // === AUTH EN LIVE (4) ===
   group('4. Live Auth - /app-services-live/auth', () => {
     console.log("🔒 Autenticación en LIVE...");
@@ -239,13 +233,12 @@ group('3. Get User Access Token - /getUserAccessToken', () => {
     }
 
     const payload = JSON.stringify({
-      token: userAccessToken
+      token: userAccessToken // ✅ Usamos el nuevo token para LIVE
     });
 
     const extraHeaders = {
       ...headersBase,
       'accept': 'application/json',
-      'accept-language': 'es-419,es;q=0.9,en;q=0.8',
       'content-type': 'application/json',
       'credentials': 'include',
       'origin': 'https://livetest.harvestful.org', 
@@ -257,7 +250,6 @@ group('3. Get User Access Token - /getUserAccessToken', () => {
       'sec-fetch-dest': 'empty',
       'sec-fetch-mode': 'cors',
       'sec-fetch-site': 'same-site',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       'Cookie': `JSESSIONID=${jsessionid}`
     };
 
@@ -304,35 +296,27 @@ group('3. Get User Access Token - /getUserAccessToken', () => {
       newSessionFailures.add(1);
       console.error("❌ Datos incompletos para /newSession");
       console.error("Valores actuales:", {
-        userAccessToken: userAccessToken ? '[SET]' : '[vacio]',
+        userAccessToken: userAccessToken ? '[SET]' : '[MISSING]',
         customerId: `[${customerId}]`,
-        userId: userId ? `[${userId}]` : '[vacio]',
+        userId: userId ? `[${userId}]` : '[MISSING]',
       });
       return;
     }
 
     const payload = JSON.stringify({
-      token: userAccessToken,
+      token: userAccessToken, // ✅ Usamos el token LIVE
       customerId: customerId,
-      userId: userId,
+      userId: userId
     });
 
     const res = http.post('https://appservicestest.harvestful.org/app-services-live/newSession',  payload, {
       headers: {
         ...headersBase,
         'accept': 'application/json',
-        'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-        'credentials': 'include',
+        'content-type': 'application/json',
+        'cookie': `JSESSIONID=${jsessionid}`,
         'origin': 'https://livetest.harvestful.org', 
-        'referer': 'https://livetest.harvestful.org/', 
-        'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Cookie': `JSESSIONID=${jsessionid}`,
+        'referer': 'https://livetest.harvestful.org/' 
       },
     });
 
