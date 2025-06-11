@@ -1,46 +1,93 @@
 {
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
   },
+  "description": "Dashboard avanzado para visualizar métricas de k6 (InfluxDB + Grafana)",
   "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
+  "fiscalYearStartMonth": 0,
+  "gnetId": 18093,
+  "graphTooltip": 2,
   "id": null,
+  "iteration": 1718078919335,
   "links": [],
   "panels": [
     {
       "aliasColors": {},
+      "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "req/s"
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": []
         },
         "overrides": []
       },
+      "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
         "y": 0
       },
-      "id": 2,
+      "id": 1,
       "legend": {
         "show": true
       },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
       "options": {
-        "tooltip": {
-          "mode": "single"
-        }
+        "dataLinks": []
       },
+      "percentage": false,
+      "pluginVersion": "9.3.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "canvas",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "refId": "A",
           "rawQuery": true,
           "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT mean(\"value\") AS \"requests_per_sec\" \n  FROM \"http_reqs\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
+          "measurement": "http_reqs",
+          "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "tags": []
         }
       ],
       "title": "HTTP Request Rate",
@@ -48,37 +95,55 @@
     },
     {
       "aliasColors": {},
+      "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "ms"
         },
         "overrides": []
       },
+      "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
         "y": 0
       },
-      "id": 4,
+      "id": 2,
       "legend": {
         "show": true
       },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
       "options": {
         "tooltip": {
           "mode": "single"
         }
       },
+      "percentage": false,
+      "pluginVersion": "9.3.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "canvas",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "refId": "A",
           "rawQuery": true,
           "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT percentile(\"value\", 95) AS \"p95_duration_ms\" \n  FROM \"http_req_duration\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
+          "measurement": "http_req_duration",
+          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)"
         }
       ],
       "title": "HTTP Request Duration (95th Percentile)",
@@ -86,15 +151,21 @@
     },
     {
       "aliasColors": {},
+      "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "short"
         },
         "overrides": []
       },
+      "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 8,
@@ -105,18 +176,30 @@
       "legend": {
         "show": true
       },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
       "options": {
         "tooltip": {
           "mode": "single"
         }
       },
+      "percentage": false,
+      "pluginVersion": "9.3.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "canvas",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "refId": "A",
           "rawQuery": true,
           "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT sum(\"value\") AS \"failed_requests\" \n  FROM \"http_req_failed\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
+          "measurement": "http_req_failed",
+          "query": "SELECT sum(\"value\") FROM \"http_req_failed\" WHERE $timeFilter GROUP BY time($__interval) fill(null)"
         }
       ],
       "title": "Failed HTTP Requests",
@@ -124,15 +207,21 @@
     },
     {
       "aliasColors": {},
+      "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "short"
         },
         "overrides": []
       },
+      "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 8,
@@ -143,40 +232,353 @@
       "legend": {
         "show": true
       },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
       "options": {
         "tooltip": {
           "mode": "single"
         }
       },
+      "percentage": false,
+      "pluginVersion": "9.3.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "canvas",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "refId": "A",
           "rawQuery": true,
           "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT sum(\"value\") AS \"login_attempts\" \n  FROM \"user_login_attempts\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
+          "measurement": "user_login_attempts",
+          "query": "SELECT sum(\"value\") FROM \"user_login_attempts\" WHERE $timeFilter GROUP BY time($__interval) fill(null)"
         },
         {
           "refId": "B",
           "rawQuery": true,
           "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT sum(\"value\") AS \"login_successes\" \n  FROM \"user_login_success\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
+          "measurement": "user_login_success",
+          "query": "SELECT sum(\"value\") FROM \"user_login_success\" WHERE $timeFilter GROUP BY time($__interval) fill(null)"
         }
       ],
       "title": "User Login",
       "type": "timeseries"
+    },
+    {
+      "columns": [],
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 67,
+      "options": {
+        "footer": {
+          "countLabel": "Total",
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "frameLimit": 500,
+        "showHeader": true,
+        "sortBy": {
+          "desc": true,
+          "displayName": "status"
+        }
+      },
+      "pluginVersion": "9.3.6",
+      "targets": [
+        {
+          "alias": "URLs and latencies",
+          "groupBy": [
+            {
+              "params": [
+                "name"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "/^$Measurement$/",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT count(\"value\"), min(\"value\"), median(\"value\"), max(\"value\"), mean(\"value\"), percentile(\"value\", 90), percentile(\"value\", 95) FROM /^$Measurement$/ WHERE (\"name\" =~ /^$URL$/) AND (\"group\" =~ /^$Group$/) AND $timeFilter GROUP BY \"group\", \"method\", \"name\", \"status\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "count"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "min"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "median"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "max"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  95
+                ],
+                "type": "percentile"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  90
+                ],
+                "type": "percentile"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "URLs and Latencies",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 69,
+      "panels": [],
+      "repeat": "Measurement",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DEBAPTEAM"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "$Measurement",
+      "type": "row"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "k6",
+    "load testing"
+  ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "Measurement",
+        "options": [],
+        "query": "authentication_duration,infoUser_duration,purchase_duration,live_auth_duration,newSession_duration",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "custom",
+        "useTags": false
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DEBAPTEAM"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"name\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "URL",
+        "multi": false,
+        "name": "URL",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"name\"",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DEBAPTEAM"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"group\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Group",
+        "multi": false,
+        "name": "Group",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"group\"",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "InfluxDB",
+          "value": "InfluxDB"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DEBAPTEAM"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Source",
+        "multi": false,
+        "name": "DS_K6INFLUXDB",
+        "options": [],
+        "query": "influxdb",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
@@ -206,7 +608,7 @@
     ]
   },
   "timezone": "",
-  "title": "k6 Load Test Metrics (InfluxQL)",
-  "uid": "k6-load-influx",
+  "title": "k6 Advanced Results",
+  "uid": "k6-load-testing-dashboard",
   "version": 1
 }
