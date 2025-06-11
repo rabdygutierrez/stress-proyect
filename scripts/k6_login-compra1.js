@@ -122,6 +122,8 @@ export default function () {
   console.log(accessTokenRes);
   console.log('xxx');
   console.log(accessTokenRes.json('result'));
+  console.log('zzzz');
+  console.log(accessTokenRes.json('result.user_access_token'));
 
   check(accessTokenRes, {
     'authenticate status 200': (r) => r.status === 200,
@@ -138,17 +140,16 @@ export default function () {
 
   // --- liveSession ---
   const livePayload = JSON.stringify({
-    token:user_access_token,
+    token:user_access_token
 
   });
- console.log(livePayload);
+ console.log('livePayload',livePayload);
   let liveRes = http.post(
     'https://appservicestest.harvestful.org/app-services-live/auth',
     livePayload,
     {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
         'X-Private-IP': privateIP,
         'Cookie': `JSESSIONID=${jsessionId}`,
       },
