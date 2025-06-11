@@ -5,12 +5,16 @@ import { Trend, Rate } from 'k6/metrics';
 
 // === MÉTRICAS PERSONALIZADAS ===
 const authDuration = new Trend('authentication_duration');
-const purchaseDuration = new Trend('purchase_duration');
+const infoUserDuration = new Trend('info_user_duration');
+const accessTokenDuration = new Trend('access_token_duration');
+const liveAuthDuration = new Trend('live_auth_duration');
 const newSessionDuration = new Trend('new_session_duration');
 
 const authFailures = new Rate('authentication_failures');
-const purchaseFailures = new Rate('purchase_failures');
-const newSessionFailures = new Rate('newSession_failures');
+const infoUserFailures = new Rate('info_user_failures');
+const accessTokenFailures = new Rate('access_token_failures');
+const liveAuthFailures = new Rate('live_auth_failures');
+const newSessionFailures = new Rate('new_session_failures');
 
 // === CARGA DE USUARIOS ===
 const users = new SharedArray('usuarios', () => {
@@ -35,27 +39,28 @@ export default function () {
     return;
   }
 
-  let jsessionid, token, userAccessToken, customerId, userId;
+  let jsessionid, sessionToken, userInfo, userAccessToken, customerId, userId;
   const headersBase = {
     'Content-Type': 'application/json',
-    'Origin': 'https://portaltest.harvestful.org',
-    'Referer': 'https://portaltest.harvestful.org/',
+    'Origin': 'https://portaltest.harvestful.org', 
+    'Referer': 'https://portaltest.harvestful.org/', 
     'User-Agent': 'Mozilla/5.0',
   };
 
-  // === AUTENTICACIÓN ===
-  group('Authenticate', () => {
+  // === AUTENTICACIÓN (1) ===
+  group('1. Authenticate - /authenticate', () => {
     console.log(`🔐 Autenticando: ${user.email}`);
     const payload = JSON.stringify({
       email: user.email,
       password: user.password,
     });
 
-    const res = http.post('https://appservicestest.harvestful.org/app-services-home/authenticate', payload, {
+    const res = http.post('https://appservicestest.harvestful.org/app-services-home/authenticate',  payload, {
       headers: headersBase,
     });
 
     authDuration.add(res.timings.duration);
+
     const ok = check(res, {
       'Auth status is 200': (r) => r.status === 200,
       'Auth token received': (r) => !!r.json().result?.token,
@@ -67,56 +72,126 @@ export default function () {
       return;
     }
 
-    token = res.json().result.token;
+    sessionToken = res.json().result.token;
     customerId = res.json().result.customerId;
     userId = res.json().result.userId;
     jsessionid = res.cookies['JSESSIONID']?.[0]?.value || '';
 
-    console.log("✅ Autenticación OK. Token:", token);
+    console.log("✅ Autenticación OK. Token:", sessionToken);
   });
 
-  // === SOLICITAR TOKEN DE ACCESO (purchase) ===
-  group('Assisted CC Purchase', () => {
-    console.log("💳 Solicitando token de acceso...");
-    const payload = JSON.stringify({
-      token,
-      card: "",
-      name: user.name || `Test_${__VU}_${__ITER}`,
-      lastname: user.lastname || `Test_${__VU}_${__ITER}`,
-      phone: user.phone || `+1${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-      email: user.email,
-      country: user.country || "US",
-      langid: 1,
-      savePaymentData: false,
-      customer_id: customerId,
-    });
+  // === OBTENER INFO DEL USUARIO (2) ===
+  group('2. Info User - /infoUser', () => {
+    console.log("🧾 Obteniendo información del usuario...");
 
-    const res = http.post('https://appservicestest.harvestful.org/app-services-home/search/api/assistedCCPurchase', payload, {
+    const res = http.get('https://appservicestest.harvestful.org/app-services-home/infoUser',  {
       headers: {
         ...headersBase,
         'Cookie': `JSESSIONID=${jsessionid}`,
       },
     });
 
-    purchaseDuration.add(res.timings.duration);
+    infoUserDuration.add(res.timings.duration);
 
     const ok = check(res, {
-      'Purchase status is 200': (r) => r.status === 200,
-      'Access token received': (r) => !!r.json().result?.authorizationInfo?.userAccessToken,
+      'InfoUser status is 200': (r) => r.status === 200,
+      'User info exists': (r) => !!r.json().result?.email,
     });
 
     if (!ok) {
-      purchaseFailures.add(1);
-      console.error("❌ Falla al solicitar access token:", res.body);
+      infoUserFailures.add(1);
+      console.error("❌ Falla al obtener info del usuario:", res.body);
       return;
     }
 
-    userAccessToken = res.json().result.authorizationInfo.userAccessToken;
-    console.log("✅ Access token OK:", userAccessToken);
+    userInfo = res.json().result;
+    console.log("✅ Información del usuario obtenida:", userInfo.email);
   });
 
-  // === INICIAR SESIÓN EN LIVE ===
-  group('New Session', () => {
+  // === OBTENER USER ACCESS TOKEN (3) ===
+  group('3. Get User Access Token - /getUserAccessToken', () => {
+    console.log("🔑 Solicitando User Access Token...");
+
+    const payload = JSON.stringify({
+      token: sessionToken,
+      customerId: customerId,
+    });
+
+    const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
+      headers: {
+        ...headersBase,
+        'Cookie': `JSESSIONID=${jsessionid}`,
+      },
+    });
+
+    accessTokenDuration.add(res.timings.duration);
+
+    const ok = check(res, {
+      'Access token status is 200': (r) => r.status === 200,
+      'User access token received': (r) => !!r.json().result?.user_access_token,
+    });
+
+    if (!ok) {
+      accessTokenFailures.add(1);
+      console.error("❌ Falla al obtener el token de acceso:", res.body);
+      return;
+    }
+
+    userAccessToken = res.json().result.user_access_token;
+    console.log("✅ User Access Token recibido:", userAccessToken);
+  });
+
+  // === AUTH EN LIVE (4) ===
+  group('4. Live Auth - /app-services-live/auth', () => {
+    console.log("🔒 Autenticación en LIVE...");
+
+    const payload = JSON.stringify({
+      token: userAccessToken
+    });
+
+    const extraHeaders = {
+      'accept': 'application/json, text/plain, */*',
+      'accept-language': 'es-419,es;q=0.9,en;q=0.8',
+      'content-type': 'application/json',
+      'credentials': 'include',
+      'origin': 'https://livetest.harvestful.org', 
+      'priority': 'u=1, i',
+      'referer': 'https://livetest.harvestful.org/', 
+      'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-site',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+      'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=51AE8E7957FE5056D0D43DD2ED50C32D` // Puedes ajustar esto si es dinámico
+    };
+
+    const res = http.post('https://appservicestest.harvestful.org/app-services-live/auth',  payload, {
+      headers: {
+        ...headersBase,
+        ...extraHeaders,
+      },
+    });
+
+    liveAuthDuration.add(res.timings.duration);
+
+    const ok = check(res, {
+      'Live Auth status is 200': (r) => r.status === 200,
+      'Live Auth success': (r) => r.json().returnCode === 0,
+    });
+
+    if (!ok) {
+      liveAuthFailures.add(1);
+      console.error("❌ Falla en autenticación LIVE:", res.body);
+      return;
+    }
+
+    console.log("✅ Autenticado en LIVE.");
+  });
+
+  // === INICIAR SESIÓN EN LIVE (5) ===
+  group('5. New Session - /app-services-live/newSession', () => {
     console.log("🎯 Iniciando sesión LIVE...");
 
     const payload = JSON.stringify({
@@ -125,11 +200,11 @@ export default function () {
       userId: userId,
     });
 
-    const res = http.post('https://appservicestest.harvestful.org/app-services-live/newSession', payload, {
+    const res = http.post('https://appservicestest.harvestful.org/app-services-live/newSession',  payload, {
       headers: {
         ...headersBase,
-        'Origin': 'https://livetest.harvestful.org',
-        'Referer': 'https://livetest.harvestful.org/',
+        'Origin': 'https://livetest.harvestful.org', 
+        'Referer': 'https://livetest.harvestful.org/', 
         'Cookie': `JSESSIONID=${jsessionid}`,
       },
     });
