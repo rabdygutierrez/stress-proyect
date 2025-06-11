@@ -1,10 +1,6 @@
 {
 "usuarios": [
-	{
-		"email" : "barberam@gmail.com",
-		"password" : "Test123**"
-	},
-	{
+		{
 		"email" : "rogerxyz@mailinator.com",
 		"password" : "Test123**"
 	},
