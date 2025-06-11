@@ -6,11 +6,11 @@ import { Trend } from 'k6/metrics';
 const authenticateDuration = new Trend('authenticate_duration');
 const infoUserDuration = new Trend('infoUser_duration');
 const getUserAccessTokenDuration = new Trend('getUserAccessToken_duration');
+const liveSessionDuration = new Trend('liveSession_duration');
+const newSessionDuration = new Trend('newSession_duration');
 
 export const options = {
-  stages: [
-    { duration: '30s', target: 1},
-  ],
+  stages: [{ duration: '30s', target: 1 }],
 };
 
 export default function () {
@@ -35,7 +35,6 @@ export default function () {
   const token = authRes.json('result.token');
   const privateIP = authRes.json('result.privateIP');
 
-  // Extraer JSESSIONID de la cookie
   const setCookieHeader = authRes.headers['Set-Cookie'] || '';
   const jsessionMatch = setCookieHeader.match(/JSESSIONID=([^;]+);/);
   const jsessionId = jsessionMatch ? jsessionMatch[1] : null;
@@ -48,7 +47,6 @@ export default function () {
   console.log(`✅ Token: ${token}`);
   console.log(`🌐 Private IP: ${privateIP}`);
   console.log(`🍪 JSESSIONID: ${jsessionId}`);
-
   sleep(1);
 
   // --- infoUser ---
@@ -77,25 +75,16 @@ export default function () {
   }
 
   const infoBody = infoRes.json();
-  const customerId =
-    infoBody.result?.purchasedEvents?.[0]?.en?.[0]?.customer_id || null;
+  const customerId = infoBody.result?.purchasedEvents?.[0]?.en?.[0]?.customer_id || null;
+  const userId = infoBody.result?.user?.id || null;
 
-  if (!customerId) {
-    console.error('❌ No se encontró customer_id en infoUser');
-    return;
-  }
-
-  console.log(`🆔 Customer ID: ${customerId}`);
-
- if (!userId) {
-    console.error('❌ No se encontró userId en infoUser');
+  if (!customerId || !userId) {
+    console.error('❌ No se encontró customer_id o userId en infoUser');
     return;
   }
 
   console.log(`🆔 Customer ID: ${customerId}`);
   console.log(`👤 User ID: ${userId}`);
-
-  sleep(1);
   sleep(1);
 
   // --- getUserAccessToken ---
@@ -112,7 +101,7 @@ export default function () {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
         'X-Private-IP': privateIP,
-        'Cookie': `JSESSIONID=${jsessionId}`, // Se añade manualmente
+        'Cookie': `JSESSIONID=${jsessionId}`,
       },
     }
   );
@@ -128,9 +117,9 @@ export default function () {
   }
 
   console.log('🔑 getUserAccessToken exitoso');
-
   sleep(1);
-    // --- liveSession ---
+
+  // --- liveSession ---
   const livePayload = JSON.stringify({
     token,
     customer_id: customerId,
@@ -161,6 +150,7 @@ export default function () {
 
   console.log('🎥 liveSession exitoso');
   sleep(1);
+
   // --- newSession ---
   const newSessionPayload = JSON.stringify({
     token,
@@ -193,5 +183,4 @@ export default function () {
 
   console.log('🆕 newSession exitoso');
   sleep(1);
-
 }
