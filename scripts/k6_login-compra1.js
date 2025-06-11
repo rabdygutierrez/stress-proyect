@@ -176,19 +176,22 @@ export default function () {
     const payload = JSON.stringify({
       token: sessionToken,     // ✅ Viene de /authenticate
       customerId: customerId, // ✅ Fijo como 671
-      email: userEmail        // ✅ Viene de /infoUser
+      email: userEmail        // ✅ Importante: requerido por el backend
     });
 
-    const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
-      headers: {
-        ...headersBase,
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        'cookie': `JSESSIONID=${jsessionid}`,
-        'origin': 'https://portaltest.harvestful.org', 
-        'referer': 'https://portaltest.harvestful.org/', 
-      },
-    });
+    const res = http.post(
+      'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken', 
+      payload, {
+        headers: {
+          ...headersBase,
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'cookie': `JSESSIONID=${jsessionid}`,
+          'origin': 'https://portaltest.harvestful.org', 
+          'referer': 'https://portaltest.harvestful.org/' 
+        },
+      }
+    );
 
     accessTokenDuration.add(res.timings.duration);
 
@@ -304,7 +307,7 @@ export default function () {
     }
 
     const payload = JSON.stringify({
-      token: userAccessToken, // ✅ Usamos el token LIVE
+      token: userAccessToken,
       customerId: customerId,
       userId: userId
     });
