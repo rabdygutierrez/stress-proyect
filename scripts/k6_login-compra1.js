@@ -178,7 +178,7 @@ export default function () {
   });
   console.log('newSessionPayload',newSessionPayload);
   let newSessionRes = http.post(
-    'https://appservicestest.harvestful.org/app-services-home/newSession',
+    'https://appservicestest.harvestful.org/app-services-live/newSession',
     newSessionPayload,
     {
       headers: {
