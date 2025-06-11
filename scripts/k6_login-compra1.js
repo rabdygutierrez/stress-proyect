@@ -118,6 +118,8 @@ export default function () {
 
   console.log('🔑 getUserAccessToken exitoso');
   sleep(1);
+  console.log('accessTokenRes');
+  console.log(accessTokenRes);
   //---------------------------------------------------------------
   const user_access_token = accessTokenRes.result?.user_access_token || null;
   // --- liveSession ---
@@ -143,13 +145,12 @@ export default function () {
   check(liveRes, {
     'liveSession status 200': (r) => r.status === 200,
   });
-
+  console.log('liveRes');
+  console.log(liveRes);
   if (liveRes.status !== 200) {
     console.error(`❌ liveSession falló con status ${liveRes.status}`);
     return;
   }
-  console.log('liveRes');
-  console.log(liveRes);
   console.log('🎥 liveSession exitoso');
   console.log(`📦 Payload liveSession: ${livePayload}`);
   sleep(1);
