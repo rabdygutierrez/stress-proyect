@@ -59,22 +59,36 @@ export default function () {
       headers: headersBase,
     });
 
-    authDuration.add(res.timings.duration);
+    console.log(`🔹 Status Auth: ${res.status}`);
+    if (res.status !== 200) {
+      console.error("❌ Respuesta no exitosa en autenticación:", res.body);
+      authFailures.add(1);
+      return;
+    }
 
-    const ok = check(res, {
-      'Auth status is 200': (r) => r.status === 200,
-      'Auth token received': (r) => !!r.json().result?.token,
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      authFailures.add(1);
+      console.error("❌ No se pudo parsear JSON en autenticación:", res.body);
+      return;
+    }
+
+    const ok = check(json, {
+      'Auth token received': (j) => !!j.result?.token,
     });
 
     if (!ok) {
       authFailures.add(1);
-      console.error("❌ Falla en autenticación:", res.body);
+      console.error("❌ Datos esperados no encontrados en autenticación:", json);
       return;
     }
 
-    sessionToken = res.json().result.token;
-    customerId = res.json().result.customerId;
-    userId = res.json().result.userId;
+    authDuration.add(res.timings.duration);
+    sessionToken = json.result.token;
+    customerId = json.result.customerId;
+    userId = json.result.userId;
     jsessionid = res.cookies['JSESSIONID']?.[0]?.value || '';
 
     console.log("✅ Autenticación OK. Token:", sessionToken);
@@ -91,20 +105,36 @@ export default function () {
       },
     });
 
-    infoUserDuration.add(res.timings.duration);
+    console.log(`🔹 Status InfoUser: ${res.status}`);
+    if (res.status !== 200) {
+      infoUserFailures.add(1);
+      console.error("❌ Error HTTP en /infoUser:", res.status);
+      console.error("Respuesta:", res.body);
+      return;
+    }
 
-    const ok = check(res, {
-      'InfoUser status is 200': (r) => r.status === 200,
-      'User info exists': (r) => !!r.json().result?.email,
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      infoUserFailures.add(1);
+      console.error("❌ Respuesta no es JSON en /infoUser");
+      console.error("Contenido recibido:", res.body.substring(0, 200));
+      return;
+    }
+
+    const ok = check(json, {
+      'User info exists': (j) => !!j.result?.email,
     });
 
     if (!ok) {
       infoUserFailures.add(1);
-      console.error("❌ Falla al obtener info del usuario:", res.body);
+      console.error("❌ Email no encontrado en /infoUser", json);
       return;
     }
 
-    userInfo = res.json().result;
+    infoUserDuration.add(res.timings.duration);
+    userInfo = json.result;
     console.log("✅ Información del usuario obtenida:", userInfo.email);
   });
 
@@ -124,20 +154,36 @@ export default function () {
       },
     });
 
-    accessTokenDuration.add(res.timings.duration);
+    console.log(`🔹 Status getUserAccessToken: ${res.status}`);
+    if (res.status !== 200) {
+      accessTokenFailures.add(1);
+      console.error("❌ Error HTTP en /getUserAccessToken:", res.status);
+      console.error("Respuesta:", res.body);
+      return;
+    }
 
-    const ok = check(res, {
-      'Access token status is 200': (r) => r.status === 200,
-      'User access token received': (r) => !!r.json().result?.user_access_token,
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      accessTokenFailures.add(1);
+      console.error("❌ Respuesta no es JSON en /getUserAccessToken");
+      console.error("Contenido recibido:", res.body.substring(0, 200));
+      return;
+    }
+
+    const ok = check(json, {
+      'User access token received': (j) => !!j.result?.user_access_token,
     });
 
     if (!ok) {
       accessTokenFailures.add(1);
-      console.error("❌ Falla al obtener el token de acceso:", res.body);
+      console.error("❌ Token no encontrado en /getUserAccessToken", json);
       return;
     }
 
-    userAccessToken = res.json().result.user_access_token;
+    accessTokenDuration.add(res.timings.duration);
+    userAccessToken = json.result.user_access_token;
     console.log("✅ User Access Token recibido:", userAccessToken);
   });
 
@@ -164,7 +210,7 @@ export default function () {
       'sec-fetch-mode': 'cors',
       'sec-fetch-site': 'same-site',
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-      'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=51AE8E7957FE5056D0D43DD2ED50C32D` // Puedes ajustar esto si es dinámico
+      'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=51AE8E7957FE5056D0D43DD2ED50C32D`
     };
 
     const res = http.post('https://appservicestest.harvestful.org/app-services-live/auth',  payload, {
@@ -174,19 +220,35 @@ export default function () {
       },
     });
 
-    liveAuthDuration.add(res.timings.duration);
+    console.log(`🔹 Status Live Auth: ${res.status}`);
+    if (res.status !== 200) {
+      liveAuthFailures.add(1);
+      console.error("❌ Error HTTP en /auth (LIVE):", res.status);
+      console.error("Respuesta:", res.body);
+      return;
+    }
 
-    const ok = check(res, {
-      'Live Auth status is 200': (r) => r.status === 200,
-      'Live Auth success': (r) => r.json().returnCode === 0,
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      liveAuthFailures.add(1);
+      console.error("❌ Respuesta no es JSON en /auth (LIVE)");
+      console.error("Contenido recibido:", res.body.substring(0, 200));
+      return;
+    }
+
+    const ok = check(json, {
+      'Live Auth success': (j) => j.returnCode === 0,
     });
 
     if (!ok) {
       liveAuthFailures.add(1);
-      console.error("❌ Falla en autenticación LIVE:", res.body);
+      console.error("❌ Autenticación en LIVE falló:", json);
       return;
     }
 
+    liveAuthDuration.add(res.timings.duration);
     console.log("✅ Autenticado en LIVE.");
   });
 
@@ -209,19 +271,36 @@ export default function () {
       },
     });
 
-    newSessionDuration.add(res.timings.duration);
+    console.log(`🔹 Status NewSession: ${res.status}`);
+    if (res.status !== 200) {
+      newSessionFailures.add(1);
+      console.error("❌ Error HTTP en /newSession:", res.status);
+      console.error("Respuesta:", res.body);
+      return;
+    }
 
-    const ok = check(res, {
-      'New session status is 200': (r) => r.status === 200,
-      'PrivateIP exists': (r) => !!r.json().result?.privateIP,
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      newSessionFailures.add(1);
+      console.error("❌ Respuesta no es JSON en /newSession");
+      console.error("Contenido recibido:", res.body.substring(0, 200));
+      return;
+    }
+
+    const ok = check(json, {
+      'PrivateIP exists': (j) => !!j.result?.privateIP,
     });
 
     if (!ok) {
       newSessionFailures.add(1);
-      console.error("❌ Falla en sesión LIVE:", res.body);
-    } else {
-      console.log("✅ Sesión LIVE iniciada. IP:", res.json().result?.privateIP);
+      console.error("❌ IP privada no encontrada en /newSession", json);
+      return;
     }
+
+    newSessionDuration.add(res.timings.duration);
+    console.log("✅ Sesión LIVE iniciada. IP:", json.result.privateIP);
   });
 
   sleep(1);
