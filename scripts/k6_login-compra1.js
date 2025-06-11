@@ -3,7 +3,6 @@ import { check, group, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Trend, Rate } from 'k6/metrics';
 
-// === MÉTRICAS PERSONALIZADAS ===
 const authDuration = new Trend('authentication_duration');
 const infoUserDuration = new Trend('info_user_duration');
 const accessTokenDuration = new Trend('access_token_duration');
@@ -16,12 +15,10 @@ const accessTokenFailures = new Rate('access_token_failures');
 const liveAuthFailures = new Rate('live_auth_failures');
 const newSessionFailures = new Rate('new_session_failures');
 
-// === CARGA DE USUARIOS ===
 const users = new SharedArray('usuarios', () => {
-  return JSON.parse(open('./users_10.json')).usuarios.slice(0, 5); // Solo 5 usuarios
+  return JSON.parse(open('./users_10.json')).usuarios.slice(0, 5);
 });
 
-// === CONFIGURACIÓN ===
 export const options = {
   stages: [
     { duration: '30s', target: 3 },
@@ -29,7 +26,27 @@ export const options = {
   ],
 };
 
-// === TEST FLOW ===
+function logRequestResponse(stepName, url, payload, res) {
+  console.log(`\n[${stepName}] Request to ${url}`);
+  console.log(`Payload: ${JSON.stringify(payload)}`);
+  console.log(`Status: ${res.status}`);
+  if (res.status !== 200) {
+    console.log(`Response body (error): ${res.body}`);
+  } else {
+    try {
+      const json = res.json();
+      // Mostrar solo claves y valores relevantes
+      if (json.result) {
+        console.log(`Response result keys: ${Object.keys(json.result).join(', ')}`);
+      } else {
+        console.log('Response JSON:', JSON.stringify(json));
+      }
+    } catch {
+      console.log('Response not JSON parseable.');
+    }
+  }
+}
+
 export default function () {
   const user = users[__VU % users.length];
   if (!user) {
@@ -52,20 +69,20 @@ export default function () {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
   };
 
-  // 1. Authenticate
   group('1. Authenticate - /authenticate', () => {
-    const payload = JSON.stringify({
+    const payload = {
       email: user.email,
       password: user.password,
-    });
+    };
 
     const res = http.post(
       'https://appservicestest.harvestful.org/app-services-home/authenticate',
-      payload,
+      JSON.stringify(payload),
       { headers: headersBase }
     );
 
     authDuration.add(res.timings.duration);
+    logRequestResponse('Authenticate', 'authenticate', payload, res);
 
     if (!check(res, { 'auth status 200': (r) => r.status === 200 })) {
       authFailures.add(1);
@@ -89,28 +106,28 @@ export default function () {
     jsessionid = res.cookies['JSESSIONID']?.[0]?.value || '';
   });
 
-  // 2. Info User
   group('2. Info User - /infoUser', () => {
     if (!sessionToken || !jsessionid) {
       infoUserFailures.add(1);
       return;
     }
 
-    const payload = JSON.stringify({ token: sessionToken });
+    const payload = { token: sessionToken };
 
     const res = http.post(
       'https://appservicestest.harvestful.org/app-services-home/infoUser',
-      payload,
+      JSON.stringify(payload),
       {
         headers: {
           ...headersBase,
-          'Accept': 'application/json',
-          'Cookie': `JSESSIONID=${jsessionid}`,
+          Accept: 'application/json',
+          Cookie: `JSESSIONID=${jsessionid}`,
         },
       }
     );
 
     infoUserDuration.add(res.timings.duration);
+    logRequestResponse('InfoUser', 'infoUser', payload, res);
 
     if (!check(res, { 'infoUser status 200': (r) => r.status === 200 })) {
       infoUserFailures.add(1);
@@ -135,34 +152,33 @@ export default function () {
     userEmail = json.result.user.email;
   });
 
-  // 3. Get User Access Token
   group('3. Get User Access Token - /getUserAccessToken', () => {
     if (!sessionToken || !userEmail || !customerId) {
       accessTokenFailures.add(1);
       return;
     }
 
-    const payload = JSON.stringify({
+    const payload = {
       token: sessionToken,
       customerId: customerId,
       email: userEmail,
-    });
+    };
 
-    // Aquí usamos Authorization Bearer en headers, que es estándar para tokens
     const res = http.post(
       'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',
-      payload,
+      JSON.stringify(payload),
       {
         headers: {
           ...headersBase,
-          'Accept': 'application/json',
-          'Cookie': `JSESSIONID=${jsessionid}`,
-          'Authorization': `Bearer ${sessionToken}`, // Posible corrección importante
+          Accept: 'application/json',
+          Cookie: `JSESSIONID=${jsessionid}`,
+          Authorization: `Bearer ${sessionToken}`,
         },
       }
     );
 
     accessTokenDuration.add(res.timings.duration);
+    logRequestResponse('GetUserAccessToken', 'getUserAccessToken', payload, res);
 
     if (!check(res, { 'getUserAccessToken status 200': (r) => r.status === 200 })) {
       accessTokenFailures.add(1);
@@ -185,20 +201,19 @@ export default function () {
     userAccessToken = json.result.user_access_token;
   });
 
-  // 4. Live Auth
   group('4. Live Auth - /app-services-live/auth', () => {
     if (!userAccessToken) {
       liveAuthFailures.add(1);
       return;
     }
 
-    const payload = JSON.stringify({ token: userAccessToken });
+    const payload = { token: userAccessToken };
 
     const extraHeaders = {
       ...headersBase,
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      'Cookie': `JSESSIONID=${jsessionid}`,
+      Cookie: `JSESSIONID=${jsessionid}`,
       Origin: 'https://livetest.harvestful.org',
       Referer: 'https://livetest.harvestful.org/',
       'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
@@ -212,11 +227,12 @@ export default function () {
 
     const res = http.post(
       'https://appservicestest.harvestful.org/app-services-live/auth',
-      payload,
+      JSON.stringify(payload),
       { headers: extraHeaders }
     );
 
     liveAuthDuration.add(res.timings.duration);
+    logRequestResponse('LiveAuth', 'liveAuth', payload, res);
 
     if (!check(res, { 'live auth status 200': (r) => r.status === 200 })) {
       liveAuthFailures.add(1);
@@ -237,22 +253,21 @@ export default function () {
     }
   });
 
-  // 5. New Session
   group('5. New Session - /app-services-live/newSession', () => {
     if (!userAccessToken || !userId) {
       newSessionFailures.add(1);
       return;
     }
 
-    const payload = JSON.stringify({
+    const payload = {
       token: userAccessToken,
       customerId: customerId,
       userId: userId,
-    });
+    };
 
     const res = http.post(
       'https://appservicestest.harvestful.org/app-services-live/newSession',
-      payload,
+      JSON.stringify(payload),
       {
         headers: {
           ...headersBase,
@@ -266,6 +281,7 @@ export default function () {
     );
 
     newSessionDuration.add(res.timings.duration);
+    logRequestResponse('NewSession', 'newSession', payload, res);
 
     if (!check(res, { 'newSession status 200': (r) => r.status === 200 })) {
       newSessionFailures.add(1);
