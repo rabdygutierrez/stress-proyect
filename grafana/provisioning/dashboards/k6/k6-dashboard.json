@@ -21,12 +21,12 @@
       }
     ]
   },
-  "description": "Dashboard avanzado para visualizar métricas de k6 (InfluxDB + Grafana)",
+  "description": "Dashboard básico para visualizar el flujo completo de login → compra → live auth → new session",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "gnetId": null,
-  "graphTooltip": 2,
+  "graphTooltip": 0,
   "id": null,
+  "iteration": 1718078919335,
   "links": [],
   "panels": [
     {
@@ -35,130 +35,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 2
-      },
-      "id": 69,
-      "title": "K6 Test overview (all URLs)",
-      "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DEBAPTEAM"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
         "y": 0
       },
       "id": 1,
-      "legend": {
-        "show": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.6",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "canvas",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "time_series",
-          "measurement": "http_reqs",
-          "query": "SELECT sum(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A",
-          "tags": []
-        }
-      ],
-      "title": "Requests per Second",
-      "type": "timeseries"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DEBAPTEAM"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 2,
-      "legend": {
-        "show": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "null",
-      "options": {
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.6",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "canvas",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "rawQuery": true,
-          "format": "time_series",
-          "measurement": "http_req_duration",
-          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "refId": "A"
-        }
-      ],
-      "title": "HTTP Request Duration (95th Percentile)",
-      "type": "timeseries"
+      "title": "K6 Test overview",
+      "type": "row"
     },
     {
       "columns": [],
@@ -190,9 +71,9 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 1
       },
-      "id": 67,
+      "id": 2,
       "options": {
         "footer": {
           "countLabel": "Total",
@@ -227,98 +108,7 @@
           "query": "SELECT count(\"value\"), min(\"value\"), median(\"value\"), max(\"value\"), mean(\"value\"), percentile(\"value\", 90), percentile(\"value\", 95) FROM /^$Measurement$/ WHERE (\"name\" =~ /^$URL$/) AND (\"group\" =~ /^$Group$/) AND $timeFilter GROUP BY \"group\", \"method\", \"name\", \"status\"",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "count"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "median"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "max"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  90
-                ],
-                "type": "percentile"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  95
-                ],
-                "type": "percentile"
-              }
-            ]
-          ],
-          "tags": []
+          "resultFormat": "table"
         }
       ],
       "title": "URLs and Latencies",
@@ -326,27 +116,69 @@
       "type": "table"
     },
     {
-      "collapsed": false,
+      "columns": [],
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DEBAPTEAM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "ms"
+        },
+        "overrides": []
+      },
       "gridPos": {
-        "h": 1,
+        "h": 12,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 11
       },
-      "id": 69,
-      "panels": [],
-      "repeat": "Measurement",
+      "id": 100,
+      "options": {
+        "footer": {
+          "countLabel": "Total",
+          "fields": "",
+          "reducer": ["sum"],
+          "show": true
+        },
+        "frameLimit": 500,
+        "showHeader": true,
+        "sortBy": {
+          "desc": true,
+          "displayName": "mean"
+        }
+      },
+      "pluginVersion": "9.3.6",
       "targets": [
         {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DEBAPTEAM"
-          },
-          "refId": "A"
+          "alias": "Simple URL Latency Table",
+          "groupBy": [
+            {
+              "params": ["name"],
+              "type": "tag"
+            },
+            {
+              "params": ["method"],
+              "type": "tag"
+            },
+            {
+              "params": ["status"],
+              "type": "tag"
+            }
+          ],
+          "measurement": "/^$Measurement$/",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT count(\"value\"), mean(\"value\"), percentile(\"value\", 90), percentile(\"value\", 95) FROM /^$Measurement$/ WHERE $timeFilter GROUP BY \"name\", \"method\", \"status\"",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "table"
         }
       ],
-      "title": "$Measurement",
-      "type": "row"
+      "title": "URLs Summary Table",
+      "transformations": [],
+      "type": "table"
     }
   ],
   "refresh": "5s",
@@ -370,14 +202,15 @@
         "multi": false,
         "name": "Measurement",
         "options": [],
-        "query": "authentication_duration,infoUser_duration,purchase_duration,live_auth_duration,newSession_duration",
+        "query": "authentication_duration,purchase_duration,live_auth_duration,newSession_duration",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
         "tagsQuery": "",
-        "type": "custom"
+        "type": "custom",
+        "useTags": false
       },
       {
         "allValue": "*",
@@ -404,7 +237,8 @@
         "sort": 1,
         "tagValuesQuery": "",
         "tagsQuery": "",
-        "type": "query"
+        "type": "query",
+        "useTags": false
       },
       {
         "allValue": "*",
@@ -431,7 +265,8 @@
         "sort": 1,
         "tagValuesQuery": "",
         "tagsQuery": "",
-        "type": "query"
+        "type": "query",
+        "useTags": false
       },
       {
         "current": {
@@ -488,7 +323,7 @@
     ]
   },
   "timezone": "",
-  "title": "k6 Advanced Results",
-  "uid": "k6-load-testing-dashboard",
-  "version": 1
+  "title": "k6 Full Flow Dashboard",
+  "uid": "k6-full-flow-dashboard",
+  "version": 2
 }

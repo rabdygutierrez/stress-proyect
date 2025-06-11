@@ -1,39 +1,43 @@
 {
 "usuarios": [
 	{
-		"email" : "testuser_k6_1749068667140_49_469@yopmail.com",
+		"email" : "barberam@gmail.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667136_96_334@yopmail.com",
+		"email" : "rogerxyz@mailinator.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667136_85_364@yopmail.com",
+		"email" : "e1605@mailinator.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667127_12_574@yopmail.com",
+		"email" : "darniw@mailinator.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667117_81_323@yopmail.com",
+		"email" : "rogerxyz100@mailinator.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667120_80_378@yopmail.com",
+		"email" : "otro@mailinator.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667096_17_557@yopmail.com",
+		"email" : "rogerxyz101@mailinator.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667079_53_445@yopmail.com",
+		"email" : "rogerxyz1@mailinator.com",
 		"password" : "Test123**"
 	},
 	{
-		"email" : "testuser_k6_1749068667062_65_420@yopmail.com",
+		"email" : "rabdy@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "v0101@mailinator.com",
 		"password" : "Test123**"
 	}
 ]}
