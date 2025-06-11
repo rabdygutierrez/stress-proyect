@@ -9,7 +9,7 @@ let loginSuccessCount = new Counter('login_success_count');
 
 export let options = {
     vus: 1,
-    duration: '1s', // Ajusta esto en tus escenarios reales
+    duration: '1s', // Ajusta según necesidad
 };
 
 export default function () {
@@ -24,14 +24,18 @@ export default function () {
     let privateIP = '';
 
     group('1. Authenticate', function () {
+        const authPayload = {
+            email: email,
+            password: password,
+            channel: channel,
+            device: device
+        };
+
+        console.log(`🔐 Enviando authenticate para ${email}`);
+
         const authRes = http.post(
             'https://appservicestest.harvestful.org/app-services-home/authenticate',
-            JSON.stringify({
-                email: email,
-                password: password,
-                channel: channel,
-                device: device
-            }),
+            JSON.stringify(authPayload),
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -39,26 +43,35 @@ export default function () {
             }
         );
 
+        console.log(`📥 Response authenticate: ${authRes.body}`);
+
         check(authRes, {
-            'status is 200': (r) => r.status === 200,
-            'authenticated successfully': (r) => r.json().returnCode === 0,
+            'status 200': (r) => r.status === 200,
+            'login exitoso': (r) => r.json().returnCode === 0,
         });
 
         if (authRes.status === 200 && authRes.json().returnCode === 0) {
-            const data = authRes.json().result;
-            token = data.token;
-            customerId = data.customerId;
-            privateIP = data.privateIP;
+            const result = authRes.json().result;
+            token = result.token;
+            customerId = result.customerId;
+            privateIP = result.privateIP;
+
+            console.log(`✅ Token: ${token}`);
+            console.log(`🆔 Customer ID: ${customerId}`);
+            console.log(`🌐 Private IP: ${privateIP}`);
+
             loginSuccessCount.add(1);
             loginDuration.add(authRes.timings.duration);
         } else {
             loginFailRate.add(1);
-            console.error('❌ Falló authenticate: ' + authRes.body);
+            console.error('❌ Error en authenticate');
             return;
         }
     });
 
     group('2. InfoUser', function () {
+        console.log(`📡 Llamando infoUser con token`);
+
         const infoRes = http.post(
             'https://appservicestest.harvestful.org/app-services-home/infoUser',
             JSON.stringify({}),
@@ -71,24 +84,30 @@ export default function () {
             }
         );
 
+        console.log(`📥 Response infoUser: ${infoRes.body}`);
+
         check(infoRes, {
-            'status is 200': (r) => r.status === 200,
-            'infoUser ok': (r) => r.json().returnCode === 0,
+            'status 200': (r) => r.status === 200,
+            'infoUser exitoso': (r) => r.json().returnCode === 0,
         });
 
-        if (infoRes.status !== 200) {
-            console.error('⚠️ Falló infoUser: ' + infoRes.body);
+        if (infoRes.status !== 200 || infoRes.json().returnCode !== 0) {
+            console.error('⚠️ Error en infoUser');
             return;
         }
     });
 
-    group('3. Get User Access Token', function () {
+    group('3. GetUserAccessToken', function () {
+        const tokenPayload = {
+            email: email,
+            customer_id: customerId
+        };
+
+        console.log(`🎫 Solicitando user access token`);
+
         const accessTokenRes = http.post(
             'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',
-            JSON.stringify({
-                email: email,
-                customer_id: customerId
-            }),
+            JSON.stringify(tokenPayload),
             {
                 headers: {
                     'Content-Type': 'application/json'
@@ -96,29 +115,35 @@ export default function () {
             }
         );
 
+        console.log(`📥 Response getUserAccessToken: ${accessTokenRes.body}`);
+
         check(accessTokenRes, {
-            'status is 200': (r) => r.status === 200,
-            'user access token ok': (r) => r.json().returnCode === 0,
+            'status 200': (r) => r.status === 200,
+            'token recibido': (r) => r.json().returnCode === 0,
         });
 
         if (accessTokenRes.status === 200 && accessTokenRes.json().returnCode === 0) {
             userAccessToken = accessTokenRes.json().result.user_access_token;
-            console.log(`🎟️ EVENT ACCESS TOKEN: ${userAccessToken}`);
+            console.log(`✅ User Access Token: ${userAccessToken}`);
         } else {
-            console.error('⚠️ Falló getUserAccessToken: ' + accessTokenRes.body);
+            console.error('⚠️ Error en getUserAccessToken');
             return;
         }
     });
 
-    group('4. New Session', function () {
+    group('4. NewSession', function () {
+        const sessionPayload = {
+            customer_id: customerId,
+            event_access_token: userAccessToken,
+            private_ip: privateIP,
+            user_device: device
+        };
+
+        console.log(`🛎️ Iniciando newSession`);
+
         const newSessionRes = http.post(
             'https://appservicestest.harvestful.org/app-services-home/newSession',
-            JSON.stringify({
-                customer_id: customerId,
-                event_access_token: userAccessToken,
-                private_ip: privateIP,
-                user_device: device
-            }),
+            JSON.stringify(sessionPayload),
             {
                 headers: {
                     'Content-Type': 'application/json'
@@ -126,13 +151,17 @@ export default function () {
             }
         );
 
+        console.log(`📥 Response newSession: ${newSessionRes.body}`);
+
         check(newSessionRes, {
-            'status is 200': (r) => r.status === 200,
-            'newSession ok': (r) => r.json().returnCode === 0,
+            'status 200': (r) => r.status === 200,
+            'newSession exitosa': (r) => r.json().returnCode === 0,
         });
 
         if (newSessionRes.status !== 200 || newSessionRes.json().returnCode !== 0) {
-            console.error('❌ Falló newSession: ' + newSessionRes.body);
+            console.error('❌ Error en newSession');
+        } else {
+            console.log('🎉 Sesión creada con éxito');
         }
     });
 }
