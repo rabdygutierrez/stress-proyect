@@ -65,7 +65,7 @@ export default function () {
     console.log(`🔹 Status Auth: ${res.status}`);
     if (res.status !== 200) {
       authFailures.add(1);
-      console.error("❌ Respuesta no exitosa en autenticación:", res.body);
+      console.error("❌ Respuesta no exitosa en autenticación");
       return;
     }
 
@@ -74,7 +74,7 @@ export default function () {
       json = res.json();
     } catch (e) {
       authFailures.add(1);
-      console.error("❌ No se pudo parsear JSON en autenticación:", res.body);
+      console.error("❌ No se pudo parsear JSON en autenticación");
       return;
     }
 
@@ -110,7 +110,7 @@ export default function () {
     const res = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser',  payload, {
       headers: {
         ...headersBase,
-        'accept': 'application/json, text/plain, */*',
+        'accept': 'application/json',
         'accept-language': 'es-419,es;q=0.9,en;q=0.8',
         'credentials': 'include',
         'origin': 'https://portaltest.harvestful.org', 
@@ -122,7 +122,7 @@ export default function () {
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-site',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Cookie': `JSESSIONID=${jsessionid}` // ✅ Solo usamos la JSESSIONID dinámica
+        'Cookie': `JSESSIONID=${jsessionid}`,
       },
     });
 
@@ -132,7 +132,6 @@ export default function () {
     if (res.status !== 200) {
       infoUserFailures.add(1);
       console.error("❌ Error HTTP en /infoUser:", res.status);
-      console.error("Respuesta:", res.body);
       return;
     }
 
@@ -142,7 +141,6 @@ export default function () {
     } catch (e) {
       infoUserFailures.add(1);
       console.error("❌ Respuesta no es JSON en /infoUser");
-      console.error("Contenido recibido:", res.body.substring(0, 200));
       return;
     }
 
@@ -170,6 +168,16 @@ export default function () {
   group('3. Get User Access Token - /getUserAccessToken', () => {
     console.log("🔑 Solicitando User Access Token...");
 
+    if (!sessionToken || !userEmail || !customerId) {
+      accessTokenFailures.add(1);
+      console.error("❌ Datos faltantes para /getUserAccessToken", {
+        sessionToken: sessionToken ? '[SET]' : '[MISSING]',
+        userEmail: userEmail ? `[${userEmail}]` : '[MISSING]',
+        customerId: `[${customerId}]`
+      });
+      return;
+    }
+
     const payload = JSON.stringify({
       token: sessionToken,
       customerId: customerId,
@@ -179,19 +187,9 @@ export default function () {
     const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
       headers: {
         ...headersBase,
-        'accept': 'application/json, text/plain, */*',
-        'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-        'credentials': 'include',
-        'origin': 'https://portaltest.harvestful.org', 
-        'referer': 'https://portaltest.harvestful.org/', 
-        'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Cookie': `JSESSIONID=${jsessionid}`, // ✅ Uso correcto de sesión dinámica
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'cookie': `JSESSIONID=${jsessionid}`,
       },
     });
 
@@ -201,7 +199,6 @@ export default function () {
     if (res.status !== 200) {
       accessTokenFailures.add(1);
       console.error("❌ Error HTTP en /getUserAccessToken:", res.status);
-      console.error("Respuesta:", res.body);
       return;
     }
 
@@ -211,7 +208,6 @@ export default function () {
     } catch (e) {
       accessTokenFailures.add(1);
       console.error("❌ Respuesta no es JSON en /getUserAccessToken");
-      console.error("Contenido recibido:", res.body.substring(0, 200));
       return;
     }
 
@@ -233,13 +229,19 @@ export default function () {
   group('4. Live Auth - /app-services-live/auth', () => {
     console.log("🔒 Autenticación en LIVE...");
 
+    if (!userAccessToken) {
+      liveAuthFailures.add(1);
+      console.error("❌ Falta userAccessToken");
+      return;
+    }
+
     const payload = JSON.stringify({
       token: userAccessToken
     });
 
     const extraHeaders = {
       ...headersBase,
-      'accept': 'application/json, text/plain, */*',
+      'accept': 'application/json',
       'accept-language': 'es-419,es;q=0.9,en;q=0.8',
       'content-type': 'application/json',
       'credentials': 'include',
@@ -253,7 +255,7 @@ export default function () {
       'sec-fetch-mode': 'cors',
       'sec-fetch-site': 'same-site',
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      'Cookie': `JSESSIONID=${jsessionid}`,
+      'Cookie': `JSESSIONID=${jsessionid}`
     };
 
     const res = http.post('https://appservicestest.harvestful.org/app-services-live/auth',  payload, {
@@ -266,7 +268,6 @@ export default function () {
     if (res.status !== 200) {
       liveAuthFailures.add(1);
       console.error("❌ Error HTTP en /auth (LIVE):", res.status);
-      console.error("Respuesta:", res.body);
       return;
     }
 
@@ -276,7 +277,6 @@ export default function () {
     } catch (e) {
       liveAuthFailures.add(1);
       console.error("❌ Respuesta no es JSON en /auth (LIVE)");
-      console.error("Contenido recibido:", res.body.substring(0, 200));
       return;
     }
 
@@ -317,9 +317,8 @@ export default function () {
     const res = http.post('https://appservicestest.harvestful.org/app-services-live/newSession',  payload, {
       headers: {
         ...headersBase,
-        'accept': 'application/json, text/plain, */*',
+        'accept': 'application/json',
         'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-        'content-type': 'application/json',
         'credentials': 'include',
         'origin': 'https://livetest.harvestful.org', 
         'referer': 'https://livetest.harvestful.org/', 
@@ -340,7 +339,6 @@ export default function () {
     if (res.status !== 200) {
       newSessionFailures.add(1);
       console.error("❌ Error HTTP en /newSession:", res.status);
-      console.error("Respuesta:", res.body);
       return;
     }
 
@@ -350,7 +348,6 @@ export default function () {
     } catch (e) {
       newSessionFailures.add(1);
       console.error("❌ Respuesta no es JSON en /newSession");
-      console.error("Contenido recibido:", res.body.substring(0, 200));
       return;
     }
 
