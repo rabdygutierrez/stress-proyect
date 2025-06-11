@@ -121,10 +121,16 @@ export default function () {
   console.log('accessTokenRes');
   console.log(accessTokenRes);
 
-  console.log('xxxxx',JSON.stringify(accessTokenRes));
+  check(accessTokenRes, {
+    'authenticate status 200': (r) => r.status === 200,
+    'authenticate token exists': (r) => !!r.json('result.user_access_token'),
+  });
+
+  const user_access_token = authRes.json('result.user_access_token');
+
   
   //---------------------------------------------------------------
-  const user_access_token = accessTokenRes.result?.user_access_token || null;
+//  const user_access_token = accessTokenRes.result?.user_access_token || null;
   console.log('user_access_token');  
   console.log(user_access_token);
 
