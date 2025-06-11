@@ -39,12 +39,23 @@ export default function () {
     return;
   }
 
-  let jsessionid, sessionToken, userInfo, userAccessToken, customerId = 671, userId;
+  let jsessionid, sessionToken, userInfo, userAccessToken, customerId = 671, userId, userEmail;
   const headersBase = {
     'Content-Type': 'application/json',
     'Origin': 'https://portaltest.harvestful.org', 
     'Referer': 'https://portaltest.harvestful.org/', 
     'User-Agent': 'Mozilla/5.0',
+  };
+
+  let dataUsed = {
+    email: user.email,
+    password: user.password,
+    jsessionid: null,
+    sessionToken: null,
+    userId: null,
+    userAccessToken: null,
+    customerId: customerId,
+    timestamp: new Date().toISOString(),
   };
 
   // === AUTENTICACIÓN (1) ===
@@ -90,6 +101,9 @@ export default function () {
     sessionToken = json.result.token;
     jsessionid = res.cookies['JSESSIONID']?.[0]?.value || '';
 
+    dataUsed.sessionToken = sessionToken;
+    dataUsed.jsessionid = jsessionid;
+
     console.log("✅ Autenticación OK. Token:", sessionToken);
     console.log("🍪 JSESSIONID obtenida:", jsessionid);
   });
@@ -104,11 +118,13 @@ export default function () {
       return;
     }
 
-    const res = http.get('https://appservicestest.harvestful.org/app-services-home/infoUser',  {
+    const payload = JSON.stringify({}); // Algunas APIs necesitan payload vacío
+
+    const res = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser',  payload, {
       headers: {
+        ...headersBase,
         'accept': 'application/json, text/plain, */*',
         'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-        'content-type': 'application/json',
         'credentials': 'include',
         'origin': 'https://portaltest.harvestful.org', 
         'priority': 'u=1, i',
@@ -145,7 +161,7 @@ export default function () {
     }
 
     const ok = check(json, {
-      'User info has userId and token': (j) => !!j.result?.userId && !!j.result?.token,
+      'User info has userId and email': (j) => !!j.result?.user?.id && !!j.result?.user?.email,
     });
 
     if (!ok) {
@@ -155,12 +171,15 @@ export default function () {
     }
 
     userInfo = json.result;
-    userId = userInfo.userId;
-    sessionToken = userInfo.token;
+    userId = json.result.user.id;
+    userEmail = json.result.user.email;
+
+    dataUsed.userId = userId;
+    dataUsed.email = userEmail;
 
     console.log("✅ Información del usuario obtenida:");
     console.log(`   userId: ${userId}`);
-    console.log(`   token: ${sessionToken}`);
+    console.log(`   email: ${userEmail}`);
     console.log(`   customerId: ${customerId}`);
   });
 
@@ -171,6 +190,7 @@ export default function () {
     const payload = JSON.stringify({
       token: sessionToken,
       customerId: customerId,
+      email: userEmail,
     });
 
     const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
@@ -211,7 +231,72 @@ export default function () {
     }
 
     userAccessToken = json.result.user_access_token;
+    dataUsed.userAccessToken = userAccessToken;
+
     console.log("✅ User Access Token recibido:", userAccessToken);
+  });
+
+  // === AUTH EN LIVE (4) ===
+  group('4. Live Auth - /app-services-live/auth', () => {
+    console.log("🔒 Autenticación en LIVE...");
+
+    const payload = JSON.stringify({
+      token: userAccessToken
+    });
+
+    const extraHeaders = {
+      'accept': 'application/json, text/plain, */*',
+      'accept-language': 'es-419,es;q=0.9,en;q=0.8',
+      'content-type': 'application/json',
+      'credentials': 'include',
+      'origin': 'https://livetest.harvestful.org', 
+      'priority': 'u=1, i',
+      'referer': 'https://livetest.harvestful.org/', 
+      'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-site',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+      'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=51AE8E7957FE5056D0D43DD2ED50C32D`
+    };
+
+    const res = http.post('https://appservicestest.harvestful.org/app-services-live/auth',  payload, {
+      headers: extraHeaders,
+    });
+
+    liveAuthDuration.add(res.timings.duration);
+
+    console.log(`🔹 Status Live Auth: ${res.status}`);
+    if (res.status !== 200) {
+      liveAuthFailures.add(1);
+      console.error("❌ Error HTTP en /auth (LIVE):", res.status);
+      console.error("Respuesta:", res.body);
+      return;
+    }
+
+    let json;
+    try {
+      json = res.json();
+    } catch (e) {
+      liveAuthFailures.add(1);
+      console.error("❌ Respuesta no es JSON en /auth (LIVE)");
+      console.error("Contenido recibido:", res.body.substring(0, 200));
+      return;
+    }
+
+    const ok = check(json, {
+      'Live Auth success': (j) => j.returnCode === 0,
+    });
+
+    if (!ok) {
+      liveAuthFailures.add(1);
+      console.error("❌ Autenticación en LIVE falló:", json);
+      return;
+    }
+
+    console.log("✅ Autenticado en LIVE.");
   });
 
   // === INICIAR SESIÓN EN LIVE (5) ===
@@ -228,8 +313,6 @@ export default function () {
       });
       return;
     }
-
-    sleep(1); // Pequeña pausa para evitar problemas de sincronización
 
     const payload = JSON.stringify({
       token: userAccessToken,
@@ -289,6 +372,17 @@ export default function () {
 
     console.log("✅ Sesión LIVE iniciada. IP:", json.result.privateIP);
   });
+
+  // === GUARDADO DE DATOS USADOS ===
+  const fs = require('fs');
+  const filename = `./results/log_${__VU}_${__ITER}.json`;
+
+  try {
+    fs.write(filename, JSON.stringify(dataUsed, null, 2));
+    console.log(`💾 Datos guardados en: ${filename}`);
+  } catch (e) {
+    console.error("⚠️ No se pudieron guardar los datos:", e.message);
+  }
 
   sleep(1);
 }
