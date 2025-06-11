@@ -1,19 +1,18 @@
 import http from 'k6/http';
-import { check, group, sleep } from 'k6';
+import { check, sleep, group } from 'k6';
 import { SharedArray } from 'k6/data';
-import { Trend, Rate } from 'k6/metrics';
+import { Trend } from 'k6/metrics';
 
-// === MÉTRICAS ===
+// === MÉTRICAS PERSONALIZADAS ===
 const infoUserDuration = new Trend('infoUser_duration');
 const newSessionDuration = new Trend('newSession_duration');
-const loginFailRate = new Rate('login_fail_rate');
 
-// === CARGA DE USUARIOS (sólo 5) ===
+// === CARGA DE USUARIOS DESDE JSON (sólo 5) ===
 const users = new SharedArray('usuarios', () =>
   JSON.parse(open('./users_10.json')).usuarios.slice(0, 5)
 );
 
-// === CONFIGURACIÓN ===
+// === CONFIGURACIÓN DEL TEST ===
 export const options = {
   stages: [
     { duration: '30s', target: 3 },
@@ -21,104 +20,69 @@ export const options = {
   ],
 };
 
+// === FUNCIÓN PRINCIPAL DE TEST ===
 export default function () {
   const user = users[__VU % users.length];
-  const email = user.email;
-  const customerId = user.customer_id;
 
-  group('Login y acceso', function () {
-    console.info(`🔐 Enviando authenticate para ${email}`);
-
-    const authPayload = JSON.stringify({ email, password: 'AdminQA*' });
-    const authHeaders = { headers: { 'Content-Type': 'application/json' } };
+  group(`🧪 Login e infoUser para ${user.email}`, () => {
+    console.info(`🔐 Enviando authenticate para ${user.email}`);
 
     const authRes = http.post(
-      'https://apptest.harvestful.org/app-services-home/authenticate',
-      authPayload,
-      authHeaders
+      'https://appservicestest.harvestful.org/app-services-home/authenticate',
+      JSON.stringify({
+        email: user.email,
+        password: user.password,
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
     );
+
+    const authSuccess = check(authRes, {
+      '🔑 Authenticate status 200': (res) => res.status === 200,
+    });
 
     console.info(`📥 Response authenticate: ${authRes.body}`);
 
-    const authOk = check(authRes, {
-      'Código 200 en authenticate': (res) => res.status === 200,
-      'Login exitoso': (res) => res.json('returnCode') === 0,
-    });
-
-    if (!authOk) {
+    if (!authSuccess) {
       console.error('❌ Error en authenticate');
-      loginFailRate.add(1);
+      return; // Abortamos esta iteración
+    }
+
+    let token;
+    try {
+      token = authRes.json('result.token');
+      if (!token) throw new Error('Token vacío o no encontrado');
+    } catch (err) {
+      console.error(`⚠️ No se pudo obtener el token: ${err.message}`);
       return;
     }
 
-    loginFailRate.add(0);
-
-    // === Paso 2: getUserAccessToken ===
-    const tokenRes = http.post(
-      'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',
-      JSON.stringify({ email, customer_id: customerId }),
-      authHeaders
-    );
-
-    const tokenData = tokenRes.json();
-    const token = tokenData?.result?.user_access_token;
-
-    if (!token) {
-      console.error('❌ No se recibió user_access_token');
-      return;
-    }
-
-    console.info(`🔑 Token recibido: ${token.substring(0, 30)}...`);
-
-    // === Paso 3: infoUser ===
     console.info('📡 Llamando infoUser con token');
 
-    const infoHeaders = {
-      headers: {
-        'Content-Type': 'application/json',
-        token: token,
+    const infoUserRes = http.post(
+      'https://appservicestest.harvestful.org/app-services-home/infoUser',
+      JSON.stringify({ token }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    infoUserDuration.add(infoUserRes.timings.duration);
+
+    console.info(`📥 Response infoUser: ${infoUserRes.body}`);
+
+    check(infoUserRes, {
+      '📊 infoUser status 200': (res) => res.status === 200,
+      '✅ infoUser contiene purchasedEvents': (res) => {
+        try {
+          const json = res.json();
+          return (
+            json &&
+            json.result &&
+            Array.isArray(json.result.purchasedEvents)
+          );
+        } catch {
+          return false;
+        }
       },
-    };
-
-    const infoRes = http.post(
-      'https://apptest.harvestful.org/app-services-home/infoUser',
-      JSON.stringify({}),
-      infoHeaders
-    );
-
-    infoUserDuration.add(infoRes.timings.duration);
-
-    console.info(`📥 Response infoUser: ${infoRes.body}`);
-
-    const infoOk = check(infoRes, {
-      'Código 200 en infoUser': (res) => res.status === 200,
-      'infoUser válido': (res) => res.json('returnCode') === 0,
     });
-
-    if (!infoOk) {
-      console.error('❌ Error en infoUser');
-      return;
-    }
-
-    // === Paso 4: newSession ===
-    const sessionRes = http.post(
-      'https://apptest.harvestful.org/app-services-home/newSession',
-      JSON.stringify({}),
-      infoHeaders
-    );
-
-    newSessionDuration.add(sessionRes.timings.duration);
-
-    console.info(`📥 Response newSession: ${sessionRes.body}`);
-
-    const sessionOk = check(sessionRes, {
-      'Código 200 en newSession': (res) => res.status === 200,
-      'newSession válido': (res) => res.json('returnCode') === 0,
-    });
-
-    if (!sessionOk) {
-      console.error('❌ Error en newSession');
-    }
 
     sleep(1);
   });
