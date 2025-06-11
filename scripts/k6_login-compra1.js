@@ -105,7 +105,7 @@ export default function () {
       return;
     }
 
-    const payload = JSON.stringify({}); // Algunas APIs necesitan payload vacío
+    const payload = JSON.stringify({});
 
     const res = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser',  payload, {
       headers: {
@@ -114,7 +114,6 @@ export default function () {
         'accept-language': 'es-419,es;q=0.9,en;q=0.8',
         'credentials': 'include',
         'origin': 'https://portaltest.harvestful.org', 
-        'priority': 'u=1, i',
         'referer': 'https://portaltest.harvestful.org/', 
         'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
         'sec-ch-ua-mobile': '?0',
@@ -122,8 +121,8 @@ export default function () {
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-        'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=27A9483287BB794F051AD165D10A36EE`,
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Cookie': `JSESSIONID=${jsessionid}` // ✅ Solo usamos la JSESSIONID dinámica
       },
     });
 
@@ -180,7 +179,19 @@ export default function () {
     const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
       headers: {
         ...headersBase,
-        'Cookie': `JSESSIONID=${jsessionid}`,
+        'accept': 'application/json, text/plain, */*',
+        'accept-language': 'es-419,es;q=0.9,en;q=0.8',
+        'credentials': 'include',
+        'origin': 'https://portaltest.harvestful.org', 
+        'referer': 'https://portaltest.harvestful.org/', 
+        'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-site',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Cookie': `JSESSIONID=${jsessionid}`, // ✅ Uso correcto de sesión dinámica
       },
     });
 
@@ -215,7 +226,6 @@ export default function () {
     }
 
     userAccessToken = json.result.user_access_token;
-
     console.log("✅ User Access Token recibido:", userAccessToken);
   });
 
@@ -228,6 +238,7 @@ export default function () {
     });
 
     const extraHeaders = {
+      ...headersBase,
       'accept': 'application/json, text/plain, */*',
       'accept-language': 'es-419,es;q=0.9,en;q=0.8',
       'content-type': 'application/json',
@@ -241,8 +252,8 @@ export default function () {
       'sec-fetch-dest': 'empty',
       'sec-fetch-mode': 'cors',
       'sec-fetch-site': 'same-site',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-      'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=51AE8E7957FE5056D0D43DD2ED50C32D`
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      'Cookie': `JSESSIONID=${jsessionid}`,
     };
 
     const res = http.post('https://appservicestest.harvestful.org/app-services-live/auth',  payload, {
@@ -308,9 +319,9 @@ export default function () {
         ...headersBase,
         'accept': 'application/json, text/plain, */*',
         'accept-language': 'es-419,es;q=0.9,en;q=0.8',
+        'content-type': 'application/json',
         'credentials': 'include',
         'origin': 'https://livetest.harvestful.org', 
-        'priority': 'u=1, i',
         'referer': 'https://livetest.harvestful.org/', 
         'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
         'sec-ch-ua-mobile': '?0',
@@ -318,8 +329,8 @@ export default function () {
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-        'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=2411F141CFDF9BA1202D203138A5BBBC`,
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Cookie': `JSESSIONID=${jsessionid}`,
       },
     });
 
