@@ -128,7 +128,7 @@ export default function () {
     'authenticate token exists': (r) => !!r.json('result.user_access_token'),
   });
 
-  const user_access_token = authRes.json('result.user_access_token');
+  const user_access_token = accessTokenRes.json('result.user_access_token');
 
   
   //---------------------------------------------------------------
