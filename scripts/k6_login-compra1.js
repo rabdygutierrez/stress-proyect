@@ -3,14 +3,12 @@ import { check, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { Trend } from 'k6/metrics';
 
-// === MÉTRICAS ===
-const infoUserDuration = new Trend('infoUser_duration');
-const newSessionDuration = new Trend('newSession_duration');
+const myTrend = new Trend('tiempo_respuesta');
 
-// === CARGA DE USUARIOS (sólo 5) ===
-const users = new SharedArray('usuarios', () =>
-  JSON.parse(open('./users_10.json')).usuarios.slice(0, 5)
-);
+// === CARGA DE USUARIOS ===
+const users = new SharedArray('usuarios', () => {
+  return JSON.parse(open('./users_10.json')).usuarios.slice(0, 5); // Solo 5 usuarios
+});
 
 // === CONFIGURACIÓN ===
 export const options = {
@@ -20,145 +18,83 @@ export const options = {
   ],
 };
 
-// === FUNCIÓN PRINCIPAL ===
 export default function () {
   const user = users[__VU % users.length];
-  console.log(`🔐 Autenticando usuario: ${user.email}`);
+  console.info(`🔐 Autenticando usuario: ${user.email}`);
 
-  // 1. AUTHENTICATE
-  const authRes = http.post(
-    'https://appservicestest.harvestful.org/app-services-home/authenticate',
-    JSON.stringify({
-      email: user.email,
-      password: user.password,
-    }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'https://portaltest.harvestful.org',
-        'Referer': 'https://portaltest.harvestful.org/',
-      },
-    }
-  );
+  const authRes = http.post('https://appservicestest.harvestful.org/app-services-home/authenticate', JSON.stringify({
+    email: user.email,
+    password: user.password
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://portaltest.harvestful.org',
+    },
+  });
 
   check(authRes, {
-    'auth success': (res) => res.status === 200,
+    'auth status is 200': (r) => r.status === 200
   });
 
-  let authJson;
-  try {
-    authJson = authRes.json();
-  } catch (e) {
-    console.error(`❌ ERROR parsing AUTH response: ${e}`);
-    console.error(authRes.body);
-    return;
-  }
+  const authData = authRes.json();
+  const authToken = authData.result?.token;
+  const jsessionid = authRes.headers['Set-Cookie']?.match(/JSESSIONID=([^;]+)/)?.[1];
 
-  const authToken = authJson?.result?.token;
-  const jsessionid = authRes.cookies?.JSESSIONID?.[0]?.value;
+  console.info(`✅ AUTH token: ${authToken}`);
+  console.info(`🍪 JSESSIONID: ${jsessionid}`);
 
-  if (!authToken || !jsessionid) {
-    console.error(`❌ Token o JSESSIONID no encontrado`);
-    return;
-  }
+  const infoRes = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser', JSON.stringify({
+    token: authToken
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `JSESSIONID=${jsessionid}`,
+      'Origin': 'https://portaltest.harvestful.org',
+    },
+  });
 
-  console.log(`✅ AUTH token: ${authToken}`);
-  console.log(`🍪 JSESSIONID: ${jsessionid}`);
+  check(infoRes, {
+    'infoUser status is 200': (r) => r.status === 200
+  });
 
-  // 2. INFO USER
-  const infoRes = http.post(
-    'https://appservicestest.harvestful.org/app-services-home/infoUser',
-    JSON.stringify({ token: authToken }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `JSESSIONID=${jsessionid}`,
-        'Origin': 'https://portaltest.harvestful.org',
-        'Referer': 'https://portaltest.harvestful.org/',
-      },
-    }
-  );
+  const infoData = infoRes.json();
+  const userId = infoData.result?.user?.id;
+  const customerId = infoData.result?.purchasedEvents?.[0]?.es?.[0]?.customer_id;
+  console.info(`🧑‍💼 userId: ${userId} | customerId: ${customerId}`);
 
-  infoUserDuration.add(infoRes.timings.duration);
+  const accessRes = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken', JSON.stringify({
+    email: user.email,
+    customer_id: customerId
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://portaltest.harvestful.org',
+      'Cookie': `JSESSIONID=${jsessionid}`,
+    },
+  });
 
-  let infoJson;
-  try {
-    if (!infoRes.headers['Content-Type'].includes('application/json')) {
-      throw new Error('Response no es JSON');
-    }
-    infoJson = infoRes.json();
-  } catch (e) {
-    console.error(`❌ Error en infoUser: ${e}`);
-    console.error(infoRes.body);
-    return;
-  }
+  check(accessRes, {
+    'getUserAccessToken status is 200': (r) => r.status === 200
+  });
 
-  const customerId = infoJson?.result?.customerId;
-  const userId = infoJson?.result?.userId;
+  const accessToken = accessRes.json().result?.token;
+  console.info(`🎟️ EVENT ACCESS TOKEN: ${accessToken}`);
 
-  if (!customerId || !userId) {
-    console.error(`🧑‍💼 userId: ${userId} | customerId: ${customerId}`);
-    return;
-  }
-
-  console.log(`🧑‍💼 userId: ${userId} | customerId: ${customerId}`);
-
-  // 3. GET ACCESS TOKEN
-  const accessRes = http.post(
-    'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',
-    JSON.stringify({
-      email: user.email,
-      customer_id: customerId,
-    }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `JSESSIONID=${jsessionid}`,
-        'Origin': 'https://portaltest.harvestful.org',
-        'Referer': 'https://portaltest.harvestful.org/',
-      },
-    }
-  );
-
-  let accessJson;
-  try {
-    accessJson = accessRes.json();
-  } catch (e) {
-    console.error(`❌ ERROR parsing AccessToken response: ${e}`);
-    console.error(accessRes.body);
-    return;
-  }
-
-  const eventAccessToken = accessJson?.result?.token;
-  if (!eventAccessToken) {
-    console.error(`❌ No se obtuvo eventAccessToken`);
-    return;
-  }
-
-  // 4. NEW SESSION
-  const newSessionRes = http.post(
-    'https://appservicestest.harvestful.org/app-services-live/newSession',
-    JSON.stringify({
-      token: eventAccessToken,
-      customerId: customerId,
-      userId: userId,
-    }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `JSESSIONID=${jsessionid}`,
-        'Origin': 'https://livetest.harvestful.org',
-        'Referer': 'https://livetest.harvestful.org/',
-      },
-    }
-  );
-
-  newSessionDuration.add(newSessionRes.timings.duration);
+  const newSessionRes = http.post('https://appservicestest.harvestful.org/app-services-home/newSession', JSON.stringify({
+    token: accessToken,
+    customerId: customerId,
+    userId: userId
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://portaltest.harvestful.org',
+      'Cookie': `JSESSIONID=${jsessionid}`,
+    },
+  });
 
   check(newSessionRes, {
-    'newSession success': (res) => res.status === 200,
+    'newSession status is 200': (r) => r.status === 200
   });
 
-  // 💤 Sleep por realismo
   sleep(1);
 }
