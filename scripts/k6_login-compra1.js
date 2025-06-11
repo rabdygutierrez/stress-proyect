@@ -14,7 +14,7 @@ const newSessionFailures = new Rate('newSession_failures');
 
 // === CARGA DE USUARIOS ===
 const users = new SharedArray('usuarios', () => {
-  return JSON.parse(open('./user_10.json')).usuarios.slice(0, 5); // Solo 5 usuarios
+  return JSON.parse(open('./users_10.json')).usuarios.slice(0, 5); // Solo 5 usuarios
 });
 
 // === CONFIGURACIÓN ===
