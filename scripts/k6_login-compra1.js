@@ -21,7 +21,7 @@ export default function () {
   // --- authenticate ---
   const authPayload = JSON.stringify({
     email: 'rogerxyz@mailinator.com',
-    password: 'AdminQA*',
+    password: 'Test123**',
   });
 
   let authRes = http.post(
