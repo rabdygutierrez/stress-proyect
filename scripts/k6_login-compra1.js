@@ -188,69 +188,68 @@ export default function () {
   });
 
   // === AUTH EN LIVE (4) ===
-  group('4. Live Auth - /app-services-live/auth', () => {
-    console.log("🔒 Autenticación en LIVE...");
+ group('4. Live Auth - /app-services-live/auth', () => {
+  console.log("🔒 Autenticación en LIVE...");
 
-    const payload = JSON.stringify({
-      token: userAccessToken
-    });
-
-    const extraHeaders = {
-      'accept': 'application/json, text/plain, */*',
-      'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-      'content-type': 'application/json',
-      'credentials': 'include',
-      'origin': 'https://livetest.harvestful.org', 
-      'priority': 'u=1, i',
-      'referer': 'https://livetest.harvestful.org/', 
-      'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"Windows"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-site',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-      'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=51AE8E7957FE5056D0D43DD2ED50C32D`
-    };
-
-    const res = http.post('https://appservicestest.harvestful.org/app-services-live/auth',  payload, {
-      headers: {
-        ...headersBase,
-        ...extraHeaders,
-      },
-    });
-
-    console.log(`🔹 Status Live Auth: ${res.status}`);
-    if (res.status !== 200) {
-      liveAuthFailures.add(1);
-      console.error("❌ Error HTTP en /auth (LIVE):", res.status);
-      console.error("Respuesta:", res.body);
-      return;
-    }
-
-    let json;
-    try {
-      json = res.json();
-    } catch (e) {
-      liveAuthFailures.add(1);
-      console.error("❌ Respuesta no es JSON en /auth (LIVE)");
-      console.error("Contenido recibido:", res.body.substring(0, 200));
-      return;
-    }
-
-    const ok = check(json, {
-      'Live Auth success': (j) => j.returnCode === 0,
-    });
-
-    if (!ok) {
-      liveAuthFailures.add(1);
-      console.error("❌ Autenticación en LIVE falló:", json);
-      return;
-    }
-
-    liveAuthDuration.add(res.timings.duration);
-    console.log("✅ Autenticado en LIVE.");
+  const payload = JSON.stringify({
+    token: userAccessToken
   });
+
+  const extraHeaders = {
+    'accept': 'application/json, text/plain, */*',
+    'accept-language': 'es-419,es;q=0.9,en;q=0.8',
+    'content-type': 'application/json',
+    'credentials': 'include',
+    'origin': 'https://livetest.harvestful.org', 
+    'priority': 'u=1, i',
+    'referer': 'https://livetest.harvestful.org/', 
+    'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-site',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+    // 👇 Aquí usamos las dos JSESSIONID como en el curl
+    'Cookie': `JSESSIONID=${jsessionid}; JSESSIONID=51AE8E7957FE5056D0D43DD2ED50C32D`,
+  };
+
+  const res = http.post('https://appservicestest.harvestful.org/app-services-live/auth',  payload, {
+    headers: extraHeaders,
+  });
+
+  liveAuthDuration.add(res.timings.duration);
+
+  // 👇 Validaciones
+  if (res.status !== 200) {
+    liveAuthFailures.add(1);
+    console.error(`❌ Error HTTP ${res.status} en /auth (LIVE)`);
+    console.error("🔹 Respuesta:", res.body);
+    return;
+  }
+
+  let json;
+  try {
+    json = res.json();
+  } catch (e) {
+    liveAuthFailures.add(1);
+    console.error("❌ Respuesta no es JSON en /auth (LIVE)");
+    console.error("Contenido recibido:", res.body.substring(0, 200));
+    return;
+  }
+
+  const ok = check(json, {
+    'Live Auth success': (j) => j.returnCode === 0,
+  });
+
+  if (!ok) {
+    liveAuthFailures.add(1);
+    console.error("❌ Autenticación en LIVE falló:", json);
+    return;
+  }
+
+  console.log("✅ Autenticado en LIVE.");
+});
 
   // === INICIAR SESIÓN EN LIVE (5) ===
   group('5. New Session - /app-services-live/newSession', () => {
