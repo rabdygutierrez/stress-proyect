@@ -9,8 +9,7 @@ const getUserAccessTokenDuration = new Trend('getUserAccessToken_duration');
 
 export const options = {
   stages: [
-    { duration: '30s', target: 3 },
-    { duration: '30s', target: 5 },
+    { duration: '30s', target: 1},
   ],
 };
 
@@ -119,4 +118,36 @@ export default function () {
   console.log('🔑 getUserAccessToken exitoso');
 
   sleep(1);
+    // --- assiedPurchase ---
+  const purchasePayload = JSON.stringify({
+    customer_id: customerId,
+    token: token,
+  });
+
+  let purchaseRes = http.post(
+    'https://appservicestest.harvestful.org/app-services-home/assiedPurchase',
+    purchasePayload,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'X-Private-IP': privateIP,
+        'Cookie': `JSESSIONID=${jsessionId}`,
+      },
+    }
+  );
+  assiedPurchaseDuration.add(purchaseRes.timings.duration);
+
+  check(purchaseRes, {
+    'assiedPurchase status 200': (r) => r.status === 200,
+  });
+
+  if (purchaseRes.status !== 200) {
+    console.error(`❌ assiedPurchase falló con status ${purchaseRes.status}`);
+    return;
+  }
+
+  console.log('💸 assiedPurchase exitoso');
+  sleep(1);
+
 }
