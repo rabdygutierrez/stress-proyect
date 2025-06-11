@@ -20,7 +20,7 @@ export const options = {
 export default function () {
   // --- authenticate ---
   const authPayload = JSON.stringify({
-    email: 'rogerxyz@mailinator.com',
+    email: 'v1901@mailinator.com',
     password: 'Test123**',
   });
 
