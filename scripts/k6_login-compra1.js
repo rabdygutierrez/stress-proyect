@@ -173,24 +173,23 @@ export default function () {
   // --- newSession ---
   const newSessionPayload = JSON.stringify({
     token:user_access_token,
-    customer_id: customerId,
-    user_id: userId,
+    customerId: customerId,
+    userId: userId
   });
-
+  console.log('newSessionPayload',newSessionPayload);
   let newSessionRes = http.post(
     'https://appservicestest.harvestful.org/app-services-home/newSession',
     newSessionPayload,
     {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
         'X-Private-IP': privateIP,
         'Cookie': `JSESSIONID=${jsessionId}`,
       },
     }
   );
   newSessionDuration.add(newSessionRes.timings.duration);
-
+  console.log('newSessionRes',newSessionRes);
   check(newSessionRes, {
     'newSession status 200': (r) => r.status === 200,
   });
