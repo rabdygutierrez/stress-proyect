@@ -148,7 +148,8 @@ export default function () {
     console.error(`❌ liveSession falló con status ${liveRes.status}`);
     return;
   }
-
+  console.log('liveRes');
+  console.log(liveRes);
   console.log('🎥 liveSession exitoso');
   console.log(`📦 Payload liveSession: ${livePayload}`);
   sleep(1);
