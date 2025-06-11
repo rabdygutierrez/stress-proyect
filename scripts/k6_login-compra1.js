@@ -252,55 +252,65 @@ export default function () {
 });
 
   // === INICIAR SESIÓN EN LIVE (5) ===
-  group('5. New Session - /app-services-live/newSession', () => {
-    console.log("🎯 Iniciando sesión LIVE...");
+group('5. New Session - /app-services-live/newSession', () => {
+  console.log("🎯 Iniciando sesión LIVE...");
 
-    const payload = JSON.stringify({
-      token: userAccessToken,
-      customerId: customerId,
-      userId: userId,
-    });
+  if (!userAccessToken || !customerId || !userId) {
+    newSessionFailures.add(1);
+    console.error("❌ Datos incompletos para /newSession");
+    console.error({ userAccessToken, customerId, userId });
+    return;
+  }
 
-    const res = http.post('https://appservicestest.harvestful.org/app-services-live/newSession',  payload, {
-      headers: {
-        ...headersBase,
-        'Origin': 'https://livetest.harvestful.org', 
-        'Referer': 'https://livetest.harvestful.org/', 
-        'Cookie': `JSESSIONID=${jsessionid}`,
-      },
-    });
+  sleep(1); // Pequeña pausa para evitar problemas de sincronización
 
-    console.log(`🔹 Status NewSession: ${res.status}`);
-    if (res.status !== 200) {
-      newSessionFailures.add(1);
-      console.error("❌ Error HTTP en /newSession:", res.status);
-      console.error("Respuesta:", res.body);
-      return;
-    }
-
-    let json;
-    try {
-      json = res.json();
-    } catch (e) {
-      newSessionFailures.add(1);
-      console.error("❌ Respuesta no es JSON en /newSession");
-      console.error("Contenido recibido:", res.body.substring(0, 200));
-      return;
-    }
-
-    const ok = check(json, {
-      'PrivateIP exists': (j) => !!j.result?.privateIP,
-    });
-
-    if (!ok) {
-      newSessionFailures.add(1);
-      console.error("❌ IP privada no encontrada en /newSession", json);
-      return;
-    }
-
-    newSessionDuration.add(res.timings.duration);
-    console.log("✅ Sesión LIVE iniciada. IP:", json.result.privateIP);
+  const payload = JSON.stringify({
+    token: userAccessToken,
+    customerId: customerId,
+    userId: userId,
   });
+
+  const res = http.post('https://appservicestest.harvestful.org/app-services-live/newSession',  payload, {
+    headers: {
+      ...headersBase,
+      'Origin': 'https://livetest.harvestful.org', 
+      'Referer': 'https://livetest.harvestful.org/', 
+      'Cookie': `JSESSIONID=${jsessionid}`,
+    },
+  });
+
+  newSessionDuration.add(res.timings.duration);
+
+  console.log(`🔹 Status NewSession: ${res.status}`);
+  if (res.status !== 200) {
+    newSessionFailures.add(1);
+    console.error("❌ Error HTTP en /newSession:", res.status);
+    console.error("Respuesta:", res.body);
+    return;
+  }
+
+  let json;
+  try {
+    json = res.json();
+  } catch (e) {
+    newSessionFailures.add(1);
+    console.error("❌ Respuesta no es JSON en /newSession");
+    console.error("Contenido recibido:", res.body.substring(0, 200));
+    return;
+  }
+
+  const ok = check(json, {
+    'PrivateIP exists': (j) => !!j.result?.privateIP,
+  });
+
+  if (!ok) {
+    newSessionFailures.add(1);
+    console.error("❌ IP privada no encontrada en /newSession", json);
+    return;
+  }
+
+  console.log("✅ Sesión LIVE iniciada. IP:", json.result.privateIP);
+});
 
   sleep(1);
 }
