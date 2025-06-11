@@ -121,4 +121,36 @@ export default function () {
   console.log('🔑 getUserAccessToken exitoso');
 
   sleep(1);
+    // --- liveSession ---
+  const livePayload = JSON.stringify({
+    token,
+    customer_id: customerId,
+  });
+
+  let liveRes = http.post(
+    'https://appservicestest.harvestful.org/app-services-home/liveSession',
+    livePayload,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'X-Private-IP': privateIP,
+        'Cookie': `JSESSIONID=${jsessionId}`,
+      },
+    }
+  );
+  liveSessionDuration.add(liveRes.timings.duration);
+
+  check(liveRes, {
+    'liveSession status 200': (r) => r.status === 200,
+  });
+
+  if (liveRes.status !== 200) {
+    console.error(`❌ liveSession falló con status ${liveRes.status}`);
+    return;
+  }
+
+  console.log('🎥 liveSession exitoso');
+  sleep(1);
+
 }
