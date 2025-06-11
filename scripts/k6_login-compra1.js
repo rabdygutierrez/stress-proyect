@@ -12,7 +12,7 @@ const newSessionDuration = new Trend('new_session_duration');
 
 // CARGA DE USUARIOS
 const users = new SharedArray('usuarios', () =>
-  JSON.parse(open('./users_1000.json')).usuarios
+  JSON.parse(open('./users_10000.json')).usuarios
 );
 
 // CONFIGURACIÓN
