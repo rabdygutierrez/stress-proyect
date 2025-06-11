@@ -40,22 +40,12 @@ export default function () {
   }
 
   let jsessionid, sessionToken, userInfo, userAccessToken, customerId = 671, userId, userEmail;
+
   const headersBase = {
     'Content-Type': 'application/json',
     'Origin': 'https://portaltest.harvestful.org', 
     'Referer': 'https://portaltest.harvestful.org/', 
     'User-Agent': 'Mozilla/5.0',
-  };
-
-  let dataUsed = {
-    email: user.email,
-    password: user.password,
-    jsessionid: null,
-    sessionToken: null,
-    userId: null,
-    userAccessToken: null,
-    customerId: customerId,
-    timestamp: new Date().toISOString(),
   };
 
   // === AUTENTICACIÓN (1) ===
@@ -100,9 +90,6 @@ export default function () {
 
     sessionToken = json.result.token;
     jsessionid = res.cookies['JSESSIONID']?.[0]?.value || '';
-
-    dataUsed.sessionToken = sessionToken;
-    dataUsed.jsessionid = jsessionid;
 
     console.log("✅ Autenticación OK. Token:", sessionToken);
     console.log("🍪 JSESSIONID obtenida:", jsessionid);
@@ -174,9 +161,6 @@ export default function () {
     userId = json.result.user.id;
     userEmail = json.result.user.email;
 
-    dataUsed.userId = userId;
-    dataUsed.email = userEmail;
-
     console.log("✅ Información del usuario obtenida:");
     console.log(`   userId: ${userId}`);
     console.log(`   email: ${userEmail}`);
@@ -231,7 +215,6 @@ export default function () {
     }
 
     userAccessToken = json.result.user_access_token;
-    dataUsed.userAccessToken = userAccessToken;
 
     console.log("✅ User Access Token recibido:", userAccessToken);
   });
@@ -322,9 +305,9 @@ export default function () {
 
     const res = http.post('https://appservicestest.harvestful.org/app-services-live/newSession',  payload, {
       headers: {
+        ...headersBase,
         'accept': 'application/json, text/plain, */*',
         'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-        'content-type': 'application/json',
         'credentials': 'include',
         'origin': 'https://livetest.harvestful.org', 
         'priority': 'u=1, i',
@@ -372,17 +355,6 @@ export default function () {
 
     console.log("✅ Sesión LIVE iniciada. IP:", json.result.privateIP);
   });
-
-  // === GUARDADO DE DATOS USADOS ===
-  const fs = require('fs');
-  const filename = `./results/log_${__VU}_${__ITER}.json`;
-
-  try {
-    fs.write(filename, JSON.stringify(dataUsed, null, 2));
-    console.log(`💾 Datos guardados en: ${filename}`);
-  } catch (e) {
-    console.error("⚠️ No se pudieron guardar los datos:", e.message);
-  }
 
   sleep(1);
 }
