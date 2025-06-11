@@ -1,103 +1,108 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-export let options = {
-  vus: 5,
-  duration: '1m',
-};
-
-const baseUrl = 'https://apptest.harvestful.org';
-
-const users = [
-  { email: 'rogerxyz@mailinator.com', password: 'Test123**', customerId: 671 },
-  // agrega más usuarios si quieres
-];
-
 export default function () {
-  const user = users[Math.floor(Math.random() * users.length)];
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  };
 
-  console.info('\n[Authenticate] Request to authenticate');
+  // 1. Authenticate
   const authPayload = JSON.stringify({
-    email: user.email,
-    password: user.password,
-  });
-  console.info('Payload:', authPayload);
-
-  let authRes = http.post(`${baseUrl}/authenticate`, authPayload, {
-    headers: { 'Content-Type': 'application/json' },
+    email: 'rogerxyz@mailinator.com',
+    password: 'Test123**',
   });
 
-  console.info('Status:', authRes.status);
-  check(authRes, { 'auth status is 200': (r) => r.status === 200 });
+  console.log('\n[Authenticate] Request to authenticate');
+  console.log(`Payload: ${authPayload}`);
+
+  const authRes = http.post('https://apptest.harvestful.org/authenticate', authPayload, { headers });
+
+  console.log(`Status: ${authRes.status}`);
+  console.log(`Response body: ${authRes.body}`);
+
+  check(authRes, {
+    'auth status is 200': (r) => r.status === 200,
+  });
 
   if (authRes.status !== 200) return;
 
-  const authResult = authRes.json();
-  console.info('Response result keys:', Object.keys(authResult));
+  const token = JSON.parse(authRes.body).token;
+  const customerId = JSON.parse(authRes.body).customer_id || 671; // Ajustá si viene del token o hardcodea
 
-  const sessionToken = authResult.token;
+  // 2. InfoUser
+  const infoUserPayload = JSON.stringify({ token });
 
-  console.info('\n[InfoUser] Request to infoUser');
-  const infoPayload = JSON.stringify({ token: sessionToken });
-  console.info('Payload:', infoPayload);
+  console.log('\n[InfoUser] Request to infoUser');
+  console.log(`Payload: ${infoUserPayload}`);
 
-  let infoRes = http.post(`${baseUrl}/infoUser`, infoPayload, {
-    headers: { 'Content-Type': 'application/json' },
+  const infoUserRes = http.post('https://apptest.harvestful.org/infoUser', infoUserPayload, { headers });
+
+  console.log(`Status: ${infoUserRes.status}`);
+  console.log(`Response body: ${infoUserRes.body}`);
+
+  check(infoUserRes, {
+    'infoUser status is 200': (r) => r.status === 200,
   });
 
-  console.info('Status:', infoRes.status);
-  check(infoRes, { 'infoUser status is 200': (r) => r.status === 200 });
+  if (infoUserRes.status !== 200) return;
 
-  if (infoRes.status !== 200) return;
-
-  const infoResult = infoRes.json();
-  console.info('Response result keys:', Object.keys(infoResult));
-
-  console.info('\n[GetUserAccessToken] Request to getUserAccessToken');
-  const accessPayload = JSON.stringify({
-    token: sessionToken,
-    customer_id: user.customerId,  // CORREGIDO customer_id en snake_case
-    email: user.email,
-  });
-  console.info('Payload:', accessPayload);
-
-  let accessRes = http.post(`${baseUrl}/getUserAccessToken`, accessPayload, {
-    headers: { 'Content-Type': 'application/json' },
+  // 3. GetUserAccessToken
+  const getUserAccessTokenPayload = JSON.stringify({
+    token,
+    customerId,
+    email: 'rogerxyz@mailinator.com',
   });
 
-  console.info('Status:', accessRes.status);
-  if (accessRes.status !== 200) {
-    console.info('Response body (error):', accessRes.body);
-    return;
-  }
+  console.log('\n[GetUserAccessToken] Request to getUserAccessToken');
+  console.log(`Payload: ${getUserAccessTokenPayload}`);
 
-  const accessResult = accessRes.json();
-  console.info('Response result keys:', Object.keys(accessResult));
+  const getUserAccessTokenRes = http.post('https://apptest.harvestful.org/getUserAccessToken', getUserAccessTokenPayload, { headers });
 
-  const userAccessToken = accessResult.userAccessToken;
+  console.log(`Status: ${getUserAccessTokenRes.status}`);
+  console.log(`Response body: ${getUserAccessTokenRes.body}`);
 
-  console.info('\n[NewSession] Request to newSession');
-  const sessionPayload = JSON.stringify({
-    token: userAccessToken,
-    customer_id: user.customerId,  // CORREGIDO customer_id en snake_case
-    userId: accessResult.userId,
-  });
-  console.info('Payload:', sessionPayload);
-
-  let sessionRes = http.post(`${baseUrl}/newSession`, sessionPayload, {
-    headers: { 'Content-Type': 'application/json' },
+  check(getUserAccessTokenRes, {
+    'getUserAccessToken status is 200': (r) => r.status === 200,
   });
 
-  console.info('Status:', sessionRes.status);
-  check(sessionRes, { 'newSession status is 200': (r) => r.status === 200 });
+  if (getUserAccessTokenRes.status !== 200) return;
 
-  if (sessionRes.status !== 200) {
-    console.info('Response body (error):', sessionRes.body);
-    return;
-  }
+  // 4. Auth LIVE (auth for LIVE module)
+  const authLivePayload = JSON.stringify({
+    token,
+  });
 
-  const sessionResult = sessionRes.json();
-  console.info('Response result keys:', Object.keys(sessionResult));
+  console.log('\n[Auth LIVE] Request to auth LIVE');
+  console.log(`Payload: ${authLivePayload}`);
+
+  const authLiveRes = http.post('https://apptest.harvestful.org/auth', authLivePayload, { headers });
+
+  console.log(`Status: ${authLiveRes.status}`);
+  console.log(`Response body: ${authLiveRes.body}`);
+
+  check(authLiveRes, {
+    'auth LIVE status is 200': (r) => r.status === 200,
+  });
+
+  if (authLiveRes.status !== 200) return;
+
+  // 5. New Session
+  const newSessionPayload = JSON.stringify({
+    token,
+  });
+
+  console.log('\n[NewSession] Request to newSession');
+  console.log(`Payload: ${newSessionPayload}`);
+
+  const newSessionRes = http.post('https://apptest.harvestful.org/newSession', newSessionPayload, { headers });
+
+  console.log(`Status: ${newSessionRes.status}`);
+  console.log(`Response body: ${newSessionRes.body}`);
+
+  check(newSessionRes, {
+    'newSession status is 200': (r) => r.status === 200,
+  });
 
   sleep(1);
 }
