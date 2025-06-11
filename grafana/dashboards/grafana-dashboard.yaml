@@ -1,7 +1,7 @@
 apiVersion: 1
 
 providers:
-  - name: 'K6-Basic-Dashboard'
+  - name: 'K6-Dashboard'
     orgId: 1
     folder: ''
     type: file
