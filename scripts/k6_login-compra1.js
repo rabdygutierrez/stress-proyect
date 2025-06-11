@@ -120,6 +120,8 @@ export default function () {
   sleep(1);
   console.log('accessTokenRes');
   console.log(accessTokenRes);
+  console.log('xxx');
+  console.log(accessTokenRes.json('result'));
 
   check(accessTokenRes, {
     'authenticate status 200': (r) => r.status === 200,
