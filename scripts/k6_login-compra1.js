@@ -119,15 +119,16 @@ export default function () {
   console.log('🔑 getUserAccessToken exitoso');
   sleep(1);
   console.log('accessTokenRes');
-  console.log(accessTokenRes);
+  
   //---------------------------------------------------------------
   const user_access_token = accessTokenRes.result?.user_access_token || null;
+  console.log(user_access_token);
   // --- liveSession ---
   const livePayload = JSON.stringify({
     token:user_access_token,
 
   });
-
+ console.log(livePayload);
   let liveRes = http.post(
     'https://appservicestest.harvestful.org/app-services-live/auth',
     livePayload,
