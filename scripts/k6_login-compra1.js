@@ -96,73 +96,76 @@ export default function () {
   });
 
   // === OBTENER INFO DEL USUARIO (2) ===
-  group('2. Info User - /infoUser', () => {
-    console.log("🧾 Obteniendo información del usuario...");
+group('2. Info User - /infoUser', () => {
+  console.log("🧾 Obteniendo información del usuario...");
 
-    if (!jsessionid) {
-      infoUserFailures.add(1);
-      console.error("❌ No hay JSESSIONID disponible");
-      return;
-    }
-
-    const payload = JSON.stringify({});
-
-    const res = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser',  payload, {
-      headers: {
-        ...headersBase,
-        'accept': 'application/json',
-        'accept-language': 'es-419,es;q=0.9,en;q=0.8',
-        'credentials': 'include',
-        'origin': 'https://portaltest.harvestful.org', 
-        'referer': 'https://portaltest.harvestful.org/', 
-        'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Cookie': `JSESSIONID=${jsessionid}`,
-      },
+  if (!jsessionid || !sessionToken) {
+    infoUserFailures.add(1);
+    console.error("❌ Faltan datos previos para /infoUser", {
+      jsessionid: jsessionid ? '[SET]' : '[vacio]',
+      sessionToken: sessionToken ? '[SET]' : '[vacio]'
     });
+    return;
+  }
 
-    infoUserDuration.add(res.timings.duration);
+  const payload = JSON.stringify({ token: sessionToken }); // ✅ Se envía token
 
-    console.log(`🔹 Status InfoUser: ${res.status}`);
-    if (res.status !== 200) {
-      infoUserFailures.add(1);
-      console.error("❌ Error HTTP en /infoUser:", res.status);
-      return;
-    }
-
-    let json;
-    try {
-      json = res.json();
-    } catch (e) {
-      infoUserFailures.add(1);
-      console.error("❌ Respuesta no es JSON en /infoUser");
-      return;
-    }
-
-    const ok = check(json, {
-      'User info has userId and email': (j) => !!j.result?.user?.id && !!j.result?.user?.email,
-    });
-
-    if (!ok) {
-      infoUserFailures.add(1);
-      console.error("❌ Datos incompletos en /infoUser", json);
-      return;
-    }
-
-    userInfo = json.result;
-    userId = json.result.user.id;
-    userEmail = json.result.user.email;
-
-    console.log("✅ Información del usuario obtenida:");
-    console.log(`   userId: ${userId}`);
-    console.log(`   email: ${userEmail}`);
-    console.log(`   customerId: ${customerId}`);
+  const res = http.post('https://appservicestest.harvestful.org/app-services-home/infoUser',  payload, {
+    headers: {
+      ...headersBase,
+      'accept': 'application/json, text/plain, */*',
+      'accept-language': 'es-419,es;q=0.9,en;q=0.8',
+      'credentials': 'include',
+      'origin': 'https://portaltest.harvestful.org', 
+      'referer': 'https://portaltest.harvestful.org/', 
+      'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-site',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      'Cookie': `JSESSIONID=${jsessionid}`
+    },
   });
+
+  infoUserDuration.add(res.timings.duration);
+
+  console.log(`🔹 Status InfoUser: ${res.status}`);
+  if (res.status !== 200) {
+    infoUserFailures.add(1);
+    console.error("❌ Error HTTP en /infoUser:", res.status);
+    return;
+  }
+
+  let json;
+  try {
+    json = res.json();
+  } catch (e) {
+    infoUserFailures.add(1);
+    console.error("❌ Respuesta no es JSON en /infoUser");
+    return;
+  }
+
+  const ok = check(json, {
+    'User info has userId and email': (j) => !!j.result?.user?.id && !!j.result?.user?.email,
+  });
+
+  if (!ok) {
+    infoUserFailures.add(1);
+    console.error("❌ Datos incompletos en /infoUser", json);
+    return;
+  }
+
+  userInfo = json.result;
+  userId = json.result.user.id;
+  userEmail = json.result.user.email;
+
+  console.log("✅ Información del usuario obtenida:");
+  console.log(`   userId: ${userId}`);
+  console.log(`   email: ${userEmail}`);
+  console.log(`   customerId: ${customerId}`);
+});
 
   // === OBTENER USER ACCESS TOKEN (3) ===
   group('3. Get User Access Token - /getUserAccessToken', () => {
@@ -171,8 +174,8 @@ export default function () {
     if (!sessionToken || !userEmail || !customerId) {
       accessTokenFailures.add(1);
       console.error("❌ Datos faltantes para /getUserAccessToken", {
-        sessionToken: sessionToken ? '[SET]' : '[MISSING]',
-        userEmail: userEmail ? `[${userEmail}]` : '[MISSING]',
+        sessionToken: sessionToken ? '[SET]' : '[vacio]',
+        userEmail: userEmail ? `[${userEmail}]` : '[vacio]',
         customerId: `[${customerId}]`
       });
       return;
@@ -301,9 +304,9 @@ export default function () {
       newSessionFailures.add(1);
       console.error("❌ Datos incompletos para /newSession");
       console.error("Valores actuales:", {
-        userAccessToken: userAccessToken ? '[SET]' : '[MISSING]',
+        userAccessToken: userAccessToken ? '[SET]' : '[vacio]',
         customerId: `[${customerId}]`,
-        userId: userId ? `[${userId}]` : '[MISSING]',
+        userId: userId ? `[${userId}]` : '[vacio]',
       });
       return;
     }
