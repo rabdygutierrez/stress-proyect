@@ -2,107 +2,126 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export default function () {
-  const headers = {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
+  const email = 'usuario@mail.com';
+  const password = 'Test123**';
+  const customerId = 12345;
+  const userId = 67890;
+
+  let authToken = '';
+  let eventAccessToken = '';
+  let userJsessionId = '';
+
+  // 1) Authenticate
+  let authenticateUrl = 'https://appservicestest.harvestful.org/app-services-home/authenticate';
+  let authenticatePayload = JSON.stringify({ email, password });
+  let authenticateHeaders = {
+    'accept': 'application/json, text/plain, */*',
+    'content-type': 'application/json',
+    'origin': 'https://portaltest.harvestful.org',
+    'referer': 'https://portaltest.harvestful.org/',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
   };
 
-  // 1. Authenticate
-  const authPayload = JSON.stringify({
-    email: 'rogerxyz@mailinator.com',
-    password: 'Test123**',
+  console.log('[Authenticate] Enviando solicitud con payload:', authenticatePayload);
+  let authenticateRes = http.post(authenticateUrl, authenticatePayload, { headers: authenticateHeaders });
+  console.log(`[Authenticate] Status: ${authenticateRes.status}`);
+
+  if (authenticateRes.status !== 200) {
+    console.error('[Authenticate] ERROR: Respuesta no exitosa');
+  } else {
+    const setCookie = authenticateRes.headers['Set-Cookie'] || '';
+    const jsessionMatch = setCookie.match(/JSESSIONID=([^;]+);/);
+    if (jsessionMatch) {
+      userJsessionId = jsessionMatch[1];
+      console.log('[Authenticate] JSESSIONID extraído:', userJsessionId);
+    } else {
+      console.error('[Authenticate] No se encontró JSESSIONID en Set-Cookie');
+    }
+  }
+
+  check(authenticateRes, { 'authenticate status 200': (r) => r.status === 200 });
+
+  // 2) getUserAccessToken
+  let tokenUrl = 'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken';
+  let tokenPayload = JSON.stringify({ email, customer_id: customerId });
+  let tokenHeaders = Object.assign({}, authenticateHeaders, { 'Cookie': `JSESSIONID=${userJsessionId}` });
+
+  console.log('[getUserAccessToken] Payload:', tokenPayload);
+  let tokenRes = http.post(tokenUrl, tokenPayload, { headers: tokenHeaders });
+  console.log(`[getUserAccessToken] Status: ${tokenRes.status}`);
+
+  if (tokenRes.status === 200) {
+    authToken = tokenRes.json('token') || '';
+    console.log('[getUserAccessToken] Token recibido:', authToken);
+  } else {
+    console.error('[getUserAccessToken] ERROR al obtener token');
+  }
+
+  check(tokenRes, { 'getUserAccessToken status 200': (r) => r.status === 200 });
+
+  // 3) infoUser
+  let infoUserUrl = 'https://appservicestest.harvestful.org/app-services-home/infoUser';
+  let infoUserPayload = JSON.stringify({ token: authToken });
+  let infoUserHeaders = Object.assign({}, authenticateHeaders, { 'Cookie': `JSESSIONID=${userJsessionId}` });
+
+  console.log('[infoUser] Payload:', infoUserPayload);
+  let infoUserRes = http.post(infoUserUrl, infoUserPayload, { headers: infoUserHeaders });
+  console.log(`[infoUser] Status: ${infoUserRes.status}`);
+
+  if (infoUserRes.status !== 200) {
+    console.error('[infoUser] ERROR en respuesta');
+  } else {
+    console.log('[infoUser] Datos usuario recibidos');
+  }
+
+  check(infoUserRes, { 'infoUser status 200': (r) => r.status === 200 });
+
+  // 4) auth (LIVE)
+  let liveAuthUrl = 'https://appservicestest.harvestful.org/app-services-live/auth';
+  let liveAuthPayload = JSON.stringify({ token: authToken });
+  let liveAuthHeaders = Object.assign({}, authenticateHeaders, {
+    'origin': 'https://livetest.harvestful.org',
+    'referer': 'https://livetest.harvestful.org/',
+    'Cookie': `JSESSIONID=${userJsessionId}`
   });
 
-  console.log('\n[Authenticate] Request to authenticate');
-  console.log(`Payload: ${authPayload}`);
+  console.log('[Live Auth] Payload:', liveAuthPayload);
+  let liveAuthRes = http.post(liveAuthUrl, liveAuthPayload, { headers: liveAuthHeaders });
+  console.log(`[Live Auth] Status: ${liveAuthRes.status}`);
 
-  const authRes = http.post('https://apptest.harvestful.org/authenticate', authPayload, { headers });
+  if (liveAuthRes.status === 200) {
+    eventAccessToken = liveAuthRes.json('eventAccessToken') || '';
+    console.log('[Live Auth] eventAccessToken recibido:', eventAccessToken);
+  } else {
+    console.error('[Live Auth] ERROR en autenticación LIVE');
+  }
 
-  console.log(`Status: ${authRes.status}`);
-  console.log(`Response body: ${authRes.body}`);
+  check(liveAuthRes, { 'live auth status 200': (r) => r.status === 200 });
 
-  check(authRes, {
-    'auth status is 200': (r) => r.status === 200,
+  // 5) newSession
+  let newSessionUrl = 'https://appservicestest.harvestful.org/app-services-live/newSession';
+  let newSessionPayload = JSON.stringify({
+    token: eventAccessToken,
+    customerId: customerId,
+    userId: userId
+  });
+  let newSessionHeaders = Object.assign({}, authenticateHeaders, {
+    'origin': 'https://livetest.harvestful.org',
+    'referer': 'https://livetest.harvestful.org/',
+    'Cookie': `JSESSIONID=${userJsessionId}`
   });
 
-  if (authRes.status !== 200) return;
+  console.log('[newSession] Payload:', newSessionPayload);
+  let newSessionRes = http.post(newSessionUrl, newSessionPayload, { headers: newSessionHeaders });
+  console.log(`[newSession] Status: ${newSessionRes.status}`);
 
-  const token = JSON.parse(authRes.body).token;
-  const customerId = JSON.parse(authRes.body).customer_id || 671; // Ajustá si viene del token o hardcodea
+  if (newSessionRes.status !== 200) {
+    console.error('[newSession] ERROR al crear sesión nueva');
+  } else {
+    console.log('[newSession] Sesión creada exitosamente');
+  }
 
-  // 2. InfoUser
-  const infoUserPayload = JSON.stringify({ token });
-
-  console.log('\n[InfoUser] Request to infoUser');
-  console.log(`Payload: ${infoUserPayload}`);
-
-  const infoUserRes = http.post('https://apptest.harvestful.org/infoUser', infoUserPayload, { headers });
-
-  console.log(`Status: ${infoUserRes.status}`);
-  console.log(`Response body: ${infoUserRes.body}`);
-
-  check(infoUserRes, {
-    'infoUser status is 200': (r) => r.status === 200,
-  });
-
-  if (infoUserRes.status !== 200) return;
-
-  // 3. GetUserAccessToken
-  const getUserAccessTokenPayload = JSON.stringify({
-    token,
-    customerId,
-    email: 'rogerxyz@mailinator.com',
-  });
-
-  console.log('\n[GetUserAccessToken] Request to getUserAccessToken');
-  console.log(`Payload: ${getUserAccessTokenPayload}`);
-
-  const getUserAccessTokenRes = http.post('https://apptest.harvestful.org/getUserAccessToken', getUserAccessTokenPayload, { headers });
-
-  console.log(`Status: ${getUserAccessTokenRes.status}`);
-  console.log(`Response body: ${getUserAccessTokenRes.body}`);
-
-  check(getUserAccessTokenRes, {
-    'getUserAccessToken status is 200': (r) => r.status === 200,
-  });
-
-  if (getUserAccessTokenRes.status !== 200) return;
-
-  // 4. Auth LIVE (auth for LIVE module)
-  const authLivePayload = JSON.stringify({
-    token,
-  });
-
-  console.log('\n[Auth LIVE] Request to auth LIVE');
-  console.log(`Payload: ${authLivePayload}`);
-
-  const authLiveRes = http.post('https://apptest.harvestful.org/auth', authLivePayload, { headers });
-
-  console.log(`Status: ${authLiveRes.status}`);
-  console.log(`Response body: ${authLiveRes.body}`);
-
-  check(authLiveRes, {
-    'auth LIVE status is 200': (r) => r.status === 200,
-  });
-
-  if (authLiveRes.status !== 200) return;
-
-  // 5. New Session
-  const newSessionPayload = JSON.stringify({
-    token,
-  });
-
-  console.log('\n[NewSession] Request to newSession');
-  console.log(`Payload: ${newSessionPayload}`);
-
-  const newSessionRes = http.post('https://apptest.harvestful.org/newSession', newSessionPayload, { headers });
-
-  console.log(`Status: ${newSessionRes.status}`);
-  console.log(`Response body: ${newSessionRes.body}`);
-
-  check(newSessionRes, {
-    'newSession status is 200': (r) => r.status === 200,
-  });
+  check(newSessionRes, { 'newSession status 200': (r) => r.status === 200 });
 
   sleep(1);
 }
