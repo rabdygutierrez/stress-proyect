@@ -16,7 +16,7 @@ export const options = {
 export default function () {
   // --- authenticate ---
   const authPayload = JSON.stringify({
-    email: 'v1901@mailinator.com',
+    email: 'v01100@mailinator.com',
     password: 'Test123**',
   });
 
@@ -86,7 +86,7 @@ export default function () {
   }
 
   console.log(`🆔 Customer ID: ${customerId}`);
-  
+
  if (!userId) {
     console.error('❌ No se encontró userId en infoUser');
     return;
@@ -100,7 +100,7 @@ export default function () {
 
   // --- getUserAccessToken ---
   const accessTokenPayload = JSON.stringify({
-    email: 'v1901@mailinator.com',
+    email: 'v01100@mailinator.com',
     customer_id: customerId,
   });
 
