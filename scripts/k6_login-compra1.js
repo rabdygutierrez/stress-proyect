@@ -168,66 +168,66 @@ group('2. Info User - /infoUser', () => {
 });
 
   // === OBTENER USER ACCESS TOKEN (3) ===
-  group('3. Get User Access Token - /getUserAccessToken', () => {
-    console.log("🔑 Solicitando User Access Token...");
+group('3. Get User Access Token - /getUserAccessToken', () => {
+  console.log("🔑 Solicitando User Access Token...");
 
-    if (!sessionToken || !userEmail || !customerId) {
-      accessTokenFailures.add(1);
-      console.error("❌ Datos faltantes para /getUserAccessToken", {
-        sessionToken: sessionToken ? '[SET]' : '[vacio]',
-        userEmail: userEmail ? `[${userEmail}]` : '[vacio]',
-        customerId: `[${customerId}]`
-      });
-      return;
-    }
-
-    const payload = JSON.stringify({
-      token: sessionToken,
-      customerId: customerId,
-      email: userEmail,
+  // ✅ Validación previa
+  if (!sessionToken || !userEmail || !customerId) {
+    accessTokenFailures.add(1);
+    console.error("❌ Datos faltantes para /getUserAccessToken", {
+      sessionToken: sessionToken ? '[SET]' : '[MISSING]',
+      userEmail: userEmail ? `[${userEmail}]` : '[MISSING]',
+      customerId: `[${customerId}]`
     });
+    return;
+  }
 
-    const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
-      headers: {
-        ...headersBase,
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        'cookie': `JSESSIONID=${jsessionid}`,
-      },
-    });
-
-    accessTokenDuration.add(res.timings.duration);
-
-    console.log(`🔹 Status getUserAccessToken: ${res.status}`);
-    if (res.status !== 200) {
-      accessTokenFailures.add(1);
-      console.error("❌ Error HTTP en /getUserAccessToken:", res.status);
-      return;
-    }
-
-    let json;
-    try {
-      json = res.json();
-    } catch (e) {
-      accessTokenFailures.add(1);
-      console.error("❌ Respuesta no es JSON en /getUserAccessToken");
-      return;
-    }
-
-    const ok = check(json, {
-      'User access token received': (j) => !!j.result?.user_access_token,
-    });
-
-    if (!ok) {
-      accessTokenFailures.add(1);
-      console.error("❌ Token no encontrado en /getUserAccessToken", json);
-      return;
-    }
-
-    userAccessToken = json.result.user_access_token;
-    console.log("✅ User Access Token recibido:", userAccessToken);
+  const payload = JSON.stringify({
+    token: sessionToken,
+    customerId: customerId,
+    email: userEmail, // ✅ Este campo es obligatorio según el error del servidor
   });
 
+  const res = http.post('https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',  payload, {
+    headers: {
+      ...headersBase,
+      'accept': 'application/json',
+      'content-type': 'application/json',
+      'cookie': `JSESSIONID=${jsessionid}`,
+    },
+  });
+
+  accessTokenDuration.add(res.timings.duration);
+
+  console.log(`🔹 Status getUserAccessToken: ${res.status}`);
+  if (res.status !== 200) {
+    accessTokenFailures.add(1);
+    console.error("❌ Error HTTP en /getUserAccessToken:", res.status);
+    return;
+  }
+
+  let json;
+  try {
+    json = res.json();
+  } catch (e) {
+    accessTokenFailures.add(1);
+    console.error("❌ Respuesta no es JSON en /getUserAccessToken");
+    return;
+  }
+
+  const ok = check(json, {
+    'User access token received': (j) => !!j.result?.user_access_token,
+  });
+
+  if (!ok) {
+    accessTokenFailures.add(1);
+    console.error("❌ Token no encontrado en /getUserAccessToken", json);
+    return;
+  }
+
+  userAccessToken = json.result.user_access_token;
+  console.log("✅ User Access Token recibido:", userAccessToken);
+});
   // === AUTH EN LIVE (4) ===
   group('4. Live Auth - /app-services-live/auth', () => {
     console.log("🔒 Autenticación en LIVE...");
