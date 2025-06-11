@@ -1,3 +1,32 @@
+import http from 'k6/http';
+import { check, group, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+import { Trend, Rate } from 'k6/metrics';
+
+// MÉTRICAS PERSONALIZADAS
+const authDuration = new Trend('authentication_duration');
+const infoUserDuration = new Trend('info_user_duration');
+const purchaseDuration = new Trend('purchase_duration');
+const liveAuthDuration = new Trend('live_auth_duration');
+const newSessionDuration = new Trend('new_session_duration');
+
+const authFailures = new Rate('authentication_failures');
+const infoUserFailures = new Rate('infoUser_failures');
+const purchaseFailures = new Rate('purchase_failures');
+const liveAuthFailures = new Rate('live_auth_failures');
+const newSessionFailures = new Rate('new_session_failures');
+
+// CARGA DE USUARIOS DESDE JSON
+const users = new SharedArray('usuarios', () =>
+  JSON.parse(open('./users_10000.json')).usuarios
+);
+
+// CONFIGURACIÓN DEL ESCENARIO
+export const options = {
+  vus: 10,
+  duration: '2m',
+};
+
 group('Assisted CC Purchase', () => {
   console.log("💳 Iniciando compra asistida...");
   const payload = JSON.stringify({
