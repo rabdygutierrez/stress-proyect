@@ -1,127 +1,171 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check, sleep, fail } from 'k6';
+import { Trend, Rate } from 'k6/metrics';
+import { SharedArray } from 'k6/data';
+import { open } from 'k6/fs';
+
+// Usuarios
+const users = new SharedArray('usuarios', () => {
+  return JSON.parse(open('./users_10.json')).usuarios.slice(0, 5);
+});
+
+// Métricas personalizadas
+const authenticateTrend = new Trend('time_authenticate');
+const authenticateSuccess = new Rate('success_authenticate');
+
+const infoUserTrend = new Trend('time_infoUser');
+const infoUserSuccess = new Rate('success_infoUser');
+
+const getUserAccessTokenTrend = new Trend('time_getUserAccessToken');
+const getUserAccessTokenSuccess = new Rate('success_getUserAccessToken');
+
+const liveAuthTrend = new Trend('time_liveAuth');
+const liveAuthSuccess = new Rate('success_liveAuth');
+
+const newSessionTrend = new Trend('time_newSession');
+const newSessionSuccess = new Rate('success_newSession');
+
+export const options = {
+  stages: [
+    { duration: '30s', target: 3 },
+    { duration: '30s', target: 5 },
+  ],
+};
 
 export default function () {
-  const email = 'usuario@mail.com';
-  const password = 'Test123**';
-  const customerId = 12345;
-  const userId = 67890;
+  const user = users[__VU - 1];
+  const email = user.email;
+  const password = user.password;
 
-  let authToken = '';
-  let eventAccessToken = '';
-  let userJsessionId = '';
-
-  // 1) Authenticate
-  let authenticateUrl = 'https://appservicestest.harvestful.org/app-services-home/authenticate';
-  let authenticatePayload = JSON.stringify({ email, password });
-  let authenticateHeaders = {
+  const commonHeadersPortal = {
     'accept': 'application/json, text/plain, */*',
     'content-type': 'application/json',
     'origin': 'https://portaltest.harvestful.org',
     'referer': 'https://portaltest.harvestful.org/',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
   };
 
-  console.log('[Authenticate] Enviando solicitud con payload:', authenticatePayload);
-  let authenticateRes = http.post(authenticateUrl, authenticatePayload, { headers: authenticateHeaders });
-  console.log(`[Authenticate] Status: ${authenticateRes.status}`);
-
-  if (authenticateRes.status !== 200) {
-    console.error('[Authenticate] ERROR: Respuesta no exitosa');
-  } else {
-    const setCookie = authenticateRes.headers['Set-Cookie'] || '';
-    const jsessionMatch = setCookie.match(/JSESSIONID=([^;]+);/);
-    if (jsessionMatch) {
-      userJsessionId = jsessionMatch[1];
-      console.log('[Authenticate] JSESSIONID extraído:', userJsessionId);
-    } else {
-      console.error('[Authenticate] No se encontró JSESSIONID en Set-Cookie');
-    }
+  // Authenticate
+  let start = Date.now();
+  let res = http.post(
+    'https://appservicestest.harvestful.org/app-services-home/authenticate',
+    JSON.stringify({ email, password }),
+    { headers: commonHeadersPortal }
+  );
+  authenticateTrend.add(Date.now() - start);
+  const authOk = check(res, {
+    'authenticate status 200': (r) => r.status === 200,
+    'authenticate has token': (r) => !!r.json('result.token'),
+  });
+  authenticateSuccess.add(authOk);
+  if (!authOk) {
+    console.error(`Authenticate failed for user ${email}: ${res.body}`);
+    fail('Authenticate step failed');
   }
 
-  check(authenticateRes, { 'authenticate status 200': (r) => r.status === 200 });
+  const authToken = res.json('result.token');
+  const setCookie = res.headers['Set-Cookie'] || '';
+  const jsessionIdMatch = setCookie.match(/JSESSIONID=([^;]+);/);
+  if (!jsessionIdMatch) {
+    console.error(`No JSESSIONID cookie for user ${email}`);
+    fail('Missing JSESSIONID');
+  }
+  const jsessionId = jsessionIdMatch[1];
 
-  // 2) getUserAccessToken
-  let tokenUrl = 'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken';
-  let tokenPayload = JSON.stringify({ email, customer_id: customerId });
-  let tokenHeaders = Object.assign({}, authenticateHeaders, { 'Cookie': `JSESSIONID=${userJsessionId}` });
-
-  console.log('[getUserAccessToken] Payload:', tokenPayload);
-  let tokenRes = http.post(tokenUrl, tokenPayload, { headers: tokenHeaders });
-  console.log(`[getUserAccessToken] Status: ${tokenRes.status}`);
-
-  if (tokenRes.status === 200) {
-    authToken = tokenRes.json('token') || '';
-    console.log('[getUserAccessToken] Token recibido:', authToken);
-  } else {
-    console.error('[getUserAccessToken] ERROR al obtener token');
+  // infoUser
+  start = Date.now();
+  res = http.post(
+    'https://appservicestest.harvestful.org/app-services-home/infoUser',
+    JSON.stringify({ token: authToken }),
+    { headers: { ...commonHeadersPortal, Cookie: `JSESSIONID=${jsessionId}` } }
+  );
+  infoUserTrend.add(Date.now() - start);
+  const infoOk = check(res, {
+    'infoUser status 200': (r) => r.status === 200,
+    'infoUser has customerId': (r) => !!r.json('result.customerId'),
+    'infoUser has userId': (r) => !!r.json('result.userId'),
+  });
+  infoUserSuccess.add(infoOk);
+  if (!infoOk) {
+    console.error(`infoUser failed for user ${email}: ${res.body}`);
+    fail('infoUser step failed');
   }
 
-  check(tokenRes, { 'getUserAccessToken status 200': (r) => r.status === 200 });
+  const customerId = res.json('result.customerId');
+  const userId = res.json('result.userId');
 
-  // 3) infoUser
-  let infoUserUrl = 'https://appservicestest.harvestful.org/app-services-home/infoUser';
-  let infoUserPayload = JSON.stringify({ token: authToken });
-  let infoUserHeaders = Object.assign({}, authenticateHeaders, { 'Cookie': `JSESSIONID=${userJsessionId}` });
-
-  console.log('[infoUser] Payload:', infoUserPayload);
-  let infoUserRes = http.post(infoUserUrl, infoUserPayload, { headers: infoUserHeaders });
-  console.log(`[infoUser] Status: ${infoUserRes.status}`);
-
-  if (infoUserRes.status !== 200) {
-    console.error('[infoUser] ERROR en respuesta');
-  } else {
-    console.log('[infoUser] Datos usuario recibidos');
+  // getUserAccessToken
+  start = Date.now();
+  res = http.post(
+    'https://appservicestest.harvestful.org/app-services-home/getUserAccessToken',
+    JSON.stringify({ email, customer_id: customerId }),
+    { headers: { ...commonHeadersPortal, Cookie: `JSESSIONID=${jsessionId}` } }
+  );
+  getUserAccessTokenTrend.add(Date.now() - start);
+  const tokenOk = check(res, {
+    'getUserAccessToken status 200': (r) => r.status === 200,
+    'getUserAccessToken has accessToken': (r) => !!r.json('result.accessToken'),
+  });
+  getUserAccessTokenSuccess.add(tokenOk);
+  if (!tokenOk) {
+    console.error(`getUserAccessToken failed for user ${email}: ${res.body}`);
+    fail('getUserAccessToken step failed');
   }
 
-  check(infoUserRes, { 'infoUser status 200': (r) => r.status === 200 });
+  const accessToken = res.json('result.accessToken');
 
-  // 4) auth (LIVE)
-  let liveAuthUrl = 'https://appservicestest.harvestful.org/app-services-live/auth';
-  let liveAuthPayload = JSON.stringify({ token: authToken });
-  let liveAuthHeaders = Object.assign({}, authenticateHeaders, {
+  // Live auth
+  const commonHeadersLive = {
+    'accept': 'application/json, text/plain, */*',
+    'content-type': 'application/json',
     'origin': 'https://livetest.harvestful.org',
     'referer': 'https://livetest.harvestful.org/',
-    'Cookie': `JSESSIONID=${userJsessionId}`
+    'user-agent': commonHeadersPortal['user-agent'],
+    Cookie: `JSESSIONID=${jsessionId}`,
+  };
+
+  start = Date.now();
+  res = http.post(
+    'https://appservicestest.harvestful.org/app-services-live/auth',
+    JSON.stringify({ token: authToken }),
+    { headers: commonHeadersLive }
+  );
+  liveAuthTrend.add(Date.now() - start);
+  const liveOk = check(res, {
+    'live auth status 200': (r) => r.status === 200,
+    'live auth has eventAccessToken': (r) => !!r.json('eventAccessToken'),
   });
-
-  console.log('[Live Auth] Payload:', liveAuthPayload);
-  let liveAuthRes = http.post(liveAuthUrl, liveAuthPayload, { headers: liveAuthHeaders });
-  console.log(`[Live Auth] Status: ${liveAuthRes.status}`);
-
-  if (liveAuthRes.status === 200) {
-    eventAccessToken = liveAuthRes.json('eventAccessToken') || '';
-    console.log('[Live Auth] eventAccessToken recibido:', eventAccessToken);
-  } else {
-    console.error('[Live Auth] ERROR en autenticación LIVE');
+  liveAuthSuccess.add(liveOk);
+  if (!liveOk) {
+    console.error(`Live auth failed for user ${email}: ${res.body}`);
+    fail('live auth step failed');
   }
 
-  check(liveAuthRes, { 'live auth status 200': (r) => r.status === 200 });
+  const eventAccessToken = res.json('eventAccessToken');
 
-  // 5) newSession
-  let newSessionUrl = 'https://appservicestest.harvestful.org/app-services-live/newSession';
-  let newSessionPayload = JSON.stringify({
+  // newSession
+  const newSessionPayload = {
     token: eventAccessToken,
-    customerId: customerId,
-    userId: userId
-  });
-  let newSessionHeaders = Object.assign({}, authenticateHeaders, {
-    'origin': 'https://livetest.harvestful.org',
-    'referer': 'https://livetest.harvestful.org/',
-    'Cookie': `JSESSIONID=${userJsessionId}`
-  });
+    customerId,
+    userId,
+    accessToken,
+  };
 
-  console.log('[newSession] Payload:', newSessionPayload);
-  let newSessionRes = http.post(newSessionUrl, newSessionPayload, { headers: newSessionHeaders });
-  console.log(`[newSession] Status: ${newSessionRes.status}`);
-
-  if (newSessionRes.status !== 200) {
-    console.error('[newSession] ERROR al crear sesión nueva');
-  } else {
-    console.log('[newSession] Sesión creada exitosamente');
+  start = Date.now();
+  res = http.post(
+    'https://appservicestest.harvestful.org/app-services-live/newSession',
+    JSON.stringify(newSessionPayload),
+    { headers: commonHeadersLive }
+  );
+  newSessionTrend.add(Date.now() - start);
+  const newSessionOk = check(res, {
+    'newSession status 200': (r) => r.status === 200,
+  });
+  newSessionSuccess.add(newSessionOk);
+  if (!newSessionOk) {
+    console.error(`newSession failed for user ${email}: ${res.body}`);
+    fail('newSession step failed');
   }
-
-  check(newSessionRes, { 'newSession status 200': (r) => r.status === 200 });
 
   sleep(1);
 }
