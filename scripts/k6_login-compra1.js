@@ -14,7 +14,7 @@ export let options = {
 
 export default function () {
     const email = 'rogerxyz@mailinator.com';
-    const password = 'Roger1234*';
+    const password = 'Test123**';
     const channel = 'WEB';
     const device = 'ChromeTest';
 
