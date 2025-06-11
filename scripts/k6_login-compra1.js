@@ -118,15 +118,16 @@ export default function () {
 
   console.log('🔑 getUserAccessToken exitoso');
   sleep(1);
-
+  //---------------------------------------------------------------
+  const user_access_token = accessTokenRes.result?.user_access_token || null;
   // --- liveSession ---
   const livePayload = JSON.stringify({
-    token,
-    customer_id: customerId,
+    token:user_access_token,
+
   });
 
   let liveRes = http.post(
-    'https://appservicestest.harvestful.org/app-services-home/liveSession',
+    'https://appservicestest.harvestful.org/app-services-live/auth',
     livePayload,
     {
       headers: {
@@ -149,11 +150,12 @@ export default function () {
   }
 
   console.log('🎥 liveSession exitoso');
+  console.log(`📦 Payload liveSession: ${livePayload}`);
   sleep(1);
 
   // --- newSession ---
   const newSessionPayload = JSON.stringify({
-    token,
+    token:user_access_token,
     customer_id: customerId,
     user_id: userId,
   });
