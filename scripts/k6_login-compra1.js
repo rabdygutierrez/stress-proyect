@@ -6,9 +6,6 @@ import { Trend } from 'k6/metrics';
 const authenticateDuration = new Trend('authenticate_duration');
 const infoUserDuration = new Trend('infoUser_duration');
 const getUserAccessTokenDuration = new Trend('getUserAccessToken_duration');
-const assiedPurchaseDuration = new Trend('assiedPurchase_duration');
-const liveSessionDuration = new Trend('liveSession_duration');
-const newSessionDuration = new Trend('newSession_duration');
 
 export const options = {
   stages: [
@@ -39,12 +36,19 @@ export default function () {
   const token = authRes.json('result.token');
   const privateIP = authRes.json('result.privateIP');
 
-  if (!token) {
-    console.error('❌ No token obtenido en authenticate, abortando...');
+  // Extraer JSESSIONID de la cookie
+  const setCookieHeader = authRes.headers['Set-Cookie'] || '';
+  const jsessionMatch = setCookieHeader.match(/JSESSIONID=([^;]+);/);
+  const jsessionId = jsessionMatch ? jsessionMatch[1] : null;
+
+  if (!token || !jsessionId) {
+    console.error('❌ No se obtuvo token o JSESSIONID, abortando...');
     return;
   }
+
   console.log(`✅ Token: ${token}`);
   console.log(`🌐 Private IP: ${privateIP}`);
+  console.log(`🍪 JSESSIONID: ${jsessionId}`);
 
   sleep(1);
 
@@ -81,10 +85,12 @@ export default function () {
     console.error('❌ No se encontró customer_id en infoUser');
     return;
   }
+
   console.log(`🆔 Customer ID: ${customerId}`);
 
   sleep(1);
-// --- getUserAccessToken ---
+
+  // --- getUserAccessToken ---
   const accessTokenPayload = JSON.stringify({ token, customer_id: customerId });
 
   let accessTokenRes = http.post(
@@ -95,6 +101,7 @@ export default function () {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
         'X-Private-IP': privateIP,
+        'Cookie': `JSESSIONID=${jsessionId}`, // Se añade manualmente
       },
     }
   );
@@ -108,10 +115,8 @@ export default function () {
     console.error(`❌ getUserAccessToken falló con status ${accessTokenRes.status}`);
     return;
   }
+
   console.log('🔑 getUserAccessToken exitoso');
 
   sleep(1);
-
- 
-
 }
