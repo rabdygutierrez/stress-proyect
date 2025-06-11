@@ -44,9 +44,7 @@ export default function () {
     return;
   }
 
-  console.log(`✅ Token: ${token}`);
-  console.log(`🌐 Private IP: ${privateIP}`);
-  console.log(`🍪 JSESSIONID: ${jsessionId}`);
+
   sleep(1);
 
   // --- infoUser ---
@@ -82,9 +80,6 @@ export default function () {
     console.error('❌ No se encontró customer_id o userId en infoUser');
     return;
   }
-
-  console.log(`🆔 Customer ID: ${customerId}`);
-  console.log(`👤 User ID: ${userId}`);
   sleep(1);
 
   // --- getUserAccessToken ---
@@ -116,34 +111,19 @@ export default function () {
     return;
   }
 
-  console.log('🔑 getUserAccessToken exitoso');
   sleep(1);
-  console.log('accessTokenRes');
-  console.log(accessTokenRes);
-  console.log('xxx');
-  console.log(accessTokenRes.json('result'));
-  console.log('zzzz');
-  console.log(accessTokenRes.json('result.user_access_token'));
-
   check(accessTokenRes, {
     'authenticate status 200': (r) => r.status === 200,
     'authenticate token exists': (r) => !!r.json('result.user_access_token'),
   });
 
   const user_access_token = accessTokenRes.json('result.user_access_token');
-
   
-  //---------------------------------------------------------------
-//  const user_access_token = accessTokenRes.result?.user_access_token || null;
-  console.log('user_access_token');  
-  console.log(user_access_token);
-
   // --- liveSession ---
   const livePayload = JSON.stringify({
     token:user_access_token
 
   });
- console.log('livePayload',livePayload);
   let liveRes = http.post(
     'https://appservicestest.harvestful.org/app-services-live/auth',
     livePayload,
@@ -160,14 +140,10 @@ export default function () {
   check(liveRes, {
     'liveSession status 200': (r) => r.status === 200,
   });
-  console.log('liveRes');
-  console.log(liveRes);
   if (liveRes.status !== 200) {
     console.error(`❌ liveSession falló con status ${liveRes.status}`);
     return;
   }
-  console.log('🎥 liveSession exitoso');
-  console.log(`📦 Payload liveSession: ${livePayload}`);
   sleep(1);
 
   // --- newSession ---
@@ -176,7 +152,6 @@ export default function () {
     customerId: customerId,
     userId: userId
   });
-  console.log('newSessionPayload',newSessionPayload);
   let newSessionRes = http.post(
     'https://appservicestest.harvestful.org/app-services-live/newSession',
     newSessionPayload,
@@ -189,7 +164,6 @@ export default function () {
     }
   );
   newSessionDuration.add(newSessionRes.timings.duration);
-  console.log('newSessionRes',newSessionRes);
   check(newSessionRes, {
     'newSession status 200': (r) => r.status === 200,
   });
@@ -198,7 +172,5 @@ export default function () {
     console.error(`❌ newSession falló con status ${newSessionRes.status}`);
     return;
   }
-
-  console.log('🆕 newSession exitoso');
   sleep(1);
 }
