@@ -81,7 +81,6 @@ export default function () {
     return;
   }
   sleep(1);
-
   // --- getUserAccessToken ---
   const accessTokenPayload = JSON.stringify({
     email: 'rabdy@yopmail.com',
