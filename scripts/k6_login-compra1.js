@@ -1,40 +1,25 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { Rate, Trend, Counter } from 'k6/metrics';
-import { SharedArray } from 'k6/data';
+import { Trend } from 'k6/metrics';
 
-// === MÉTRICAS PERSONALIZADAS ===
-let loginFailRate = new Rate('login_fail_rate');
-let loginDuration = new Trend('login_duration');
-let loginSuccessCount = new Counter('login_success_count');
+// Métricas
+const authenticateDuration = new Trend('authenticate_duration');
 const infoUserDuration = new Trend('infoUser_duration');
 const getUserAccessTokenDuration = new Trend('getUserAccessToken_duration');
 const liveSessionDuration = new Trend('liveSession_duration');
 const newSessionDuration = new Trend('newSession_duration');
 
-// === CARGA DE USUARIOS (sólo 5) ===
-const users = new SharedArray('usuarios', () =>
-  JSON.parse(open('./users_10.json')).usuarios.slice(0, 5)
-);
-
-// === CONFIGURACIÓN DE PRUEBA ===
 export const options = {
-  stages: [
-    { duration: '30s', target: 3 },
-    { duration: '30s', target: 5 },
-  ],
+  stages: [{ duration: '30s', target: 1 }],
 };
 
 export default function () {
-  // Seleccionar un usuario aleatorio
-  const user = users[Math.floor(Math.random() * users.length)];
-
   // --- authenticate ---
   const authPayload = JSON.stringify({
-    email: user.email,
-    password: user.password,
+    email: 'v0101@mailinator.com',
+    password: 'Test123**',
   });
-  
+
   let authRes = http.post(
     'https://appservicestest.harvestful.org/app-services-home/authenticate',
     authPayload,
@@ -99,7 +84,7 @@ export default function () {
 
   // --- getUserAccessToken ---
   const accessTokenPayload = JSON.stringify({
-    email: 'v01100@mailinator.com',
+    email: 'v0101@mailinator.com',
     customer_id: customerId,
   });
 
