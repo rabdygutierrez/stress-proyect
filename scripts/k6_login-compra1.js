@@ -16,7 +16,7 @@ export const options = {
 export default function () {
   // --- authenticate ---
   const authPayload = JSON.stringify({
-    email: 'v0101@mailinator.com',
+    email: 'rabdy@yopmail.com',
     password: 'Test123**',
   });
 
@@ -84,7 +84,7 @@ export default function () {
 
   // --- getUserAccessToken ---
   const accessTokenPayload = JSON.stringify({
-    email: 'v0101@mailinator.com',
+    email: 'rabdy@yopmail.com',
     customer_id: customerId,
   });
 
