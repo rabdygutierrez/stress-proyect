@@ -13,9 +13,11 @@ const userCount = new Counter('users_tested');
 // CARGA DE USUARIOS
 
 const users = new SharedArray('usuarios', () =>
-JSON.parse(open('./users_10.json')).usuarios 
+JSON.parse(open('./users_10000.json')).usuarios 
 );
 // CONFIGURACIÓN DEL ESCENARIO
+//Usuarios: 100 usuarios virtuales.
+// Duración: Hasta 10 minutos.
 export const options = {
   scenarios: {
     user_auth_info_flow: {

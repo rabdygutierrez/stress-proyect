@@ -1,212 +1,102 @@
 {
-  "annotations": {
-    "list": []
-  },
-  "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
-  "id": null,
-  "links": [],
-  "panels": [
-    {
-      "aliasColors": {},
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "req/s"
+  "dashboard": {
+    "id": null,
+    "title": "K6 Stress Test Dashboard",
+    "timezone": "browser",
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Authenticate Duration",
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "measurement": "authenticate_duration",
+            "groupBy": [{ "type": "time", "params": ["$__interval"] }],
+            "select": [[{ "type": "mean", "params": [] }]],
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ms" },
+          "overrides": []
         },
-        "overrides": []
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 }
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 2,
-      "legend": {
-        "show": true
-      },
-      "options": {
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "rawQuery": true,
-          "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT mean(\"value\") AS \"requests_per_sec\" \n  FROM \"http_reqs\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
-        }
-      ],
-      "title": "HTTP Request Rate",
-      "type": "timeseries"
-    },
-    {
-      "aliasColors": {},
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ms"
+      {
+        "type": "timeseries",
+        "title": "InfoUser Duration",
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "measurement": "infoUser_duration",
+            "groupBy": [{ "type": "time", "params": ["$__interval"] }],
+            "select": [[{ "type": "mean", "params": [] }]],
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ms" },
+          "overrides": []
         },
-        "overrides": []
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 }
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 4,
-      "legend": {
-        "show": true
-      },
-      "options": {
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "rawQuery": true,
-          "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT percentile(\"value\", 95) AS \"p95_duration_ms\" \n  FROM \"http_req_duration\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
-        }
-      ],
-      "title": "HTTP Request Duration (95th Percentile)",
-      "type": "timeseries"
-    },
-    {
-      "aliasColors": {},
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
+      {
+        "type": "timeseries",
+        "title": "UserAccessToken Duration",
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "measurement": "getUserAccessToken_duration",
+            "groupBy": [{ "type": "time", "params": ["$__interval"] }],
+            "select": [[{ "type": "mean", "params": [] }]],
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ms" },
+          "overrides": []
         },
-        "overrides": []
+        "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 }
       },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 8
-      },
-      "id": 6,
-      "legend": {
-        "show": true
-      },
-      "options": {
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "rawQuery": true,
-          "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT sum(\"value\") AS \"failed_requests\" \n  FROM \"http_req_failed\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
-        }
-      ],
-      "title": "Failed HTTP Requests",
-      "type": "timeseries"
-    },
-    {
-      "aliasColors": {},
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
+      {
+        "type": "timeseries",
+        "title": "LiveSession Duration",
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "measurement": "liveSession_duration",
+            "groupBy": [{ "type": "time", "params": ["$__interval"] }],
+            "select": [[{ "type": "mean", "params": [] }]],
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ms" },
+          "overrides": []
         },
-        "overrides": []
+        "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 }
       },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 8
-      },
-      "id": 7,
-      "legend": {
-        "show": true
-      },
-      "options": {
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "rawQuery": true,
-          "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT sum(\"value\") AS \"login_attempts\" \n  FROM \"user_login_attempts\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
+      {
+        "type": "timeseries",
+        "title": "NewSession Duration",
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "measurement": "newSession_duration",
+            "groupBy": [{ "type": "time", "params": ["$__interval"] }],
+            "select": [[{ "type": "mean", "params": [] }]],
+            "refId": "E"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ms" },
+          "overrides": []
         },
-        {
-          "refId": "B",
-          "rawQuery": true,
-          "format": "time_series",
-          "datasource": "InfluxDB",
-          "query": "SELECT sum(\"value\") AS \"login_successes\" \n  FROM \"user_login_success\" \n  WHERE $timeFilter \n  GROUP BY time($__interval) fill(null)"
-        }
-      ],
-      "title": "User Login",
-      "type": "timeseries"
-    }
-  ],
-  "refresh": "5s",
-  "schemaVersion": 38,
-  "style": "dark",
-  "tags": [],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-30m",
-    "to": "now"
-  },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
+        "gridPos": { "x": 0, "y": 12, "w": 24, "h": 6 }
+      }
     ],
-    "time_options": [
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
+    "schemaVersion": 38,
+    "version": 1
   },
-  "timezone": "",
-  "title": "k6 Load Test Metrics (InfluxQL)",
-  "uid": "k6-load-influx",
-  "version": 1
+  "overwrite": true
 }

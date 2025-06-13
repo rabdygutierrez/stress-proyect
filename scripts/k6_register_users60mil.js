@@ -9,6 +9,9 @@ const registerFailures = new Rate('user_register_failures');
 const registerDuration = new Trend('register_duration');
 
 // === CONFIGURACIÓN DE PRUEBA ===
+//Durante los 10 minutos de carga sostenida, tendrás 100 VUs activos. 
+// Si cada VU completa una iteración en aproximadamente 1 segundo 
+// Total de 100 VUs * 600 segundos = 60,000
 const testConfigs = {
   smokeTest: {
     vus: 1,

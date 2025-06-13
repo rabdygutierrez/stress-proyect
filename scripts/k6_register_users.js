@@ -10,10 +10,12 @@ const registerDuration = new Trend('register_duration');
 
 // === CONFIGURACIÓN POR TIPO DE PRUEBA ===
 const testConfigs = {
+  //Aproximadamente 30 registros en 30 segundos.
   smokeTest: {
     vus: 1,
     duration: '30s',
   },
+  // Aproximadamente 1,000 a 1,500 registros en 7 minutos.
   loadTest: {
     stages: [
       { duration: '5m', target: 15 },
