@@ -6,6 +6,6 @@ providers:
     folder: ''
     type: file
     options:
-      path: /etc/grafana/provisioning/dashboards/k6
+      path: /etc/grafana/provisioning/dashboards
       updateIntervalSeconds: 30
       allowUiUpdates: true
