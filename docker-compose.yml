@@ -15,6 +15,7 @@ services:
       #- INFLUXDB_HTTP_AUTH_ENABLED=true # Habilitar autenticación HTTP (importante para k6)
     restart: unless-stopped # Asegura que el servicio se reinicie si el contenedor falla
 
+
   # Servicio Grafana
   grafana:
     image: grafana/grafana-oss:latest
