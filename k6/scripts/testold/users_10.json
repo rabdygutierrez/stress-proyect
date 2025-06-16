@@ -1,0 +1,39 @@
+{
+"usuarios": [
+		{
+		"email" : "rogerxyz@mailinator.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "e1605@mailinator.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "darniw@mailinator.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "rogerxyz100@mailinator.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "otro@mailinator.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "rogerxyz101@mailinator.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "rogerxyz1@mailinator.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "rabdy@yopmail.com",
+		"password" : "Test123**"
+	},
+	{
+		"email" : "v0101@mailinator.com",
+		"password" : "Test123**"
+	}
+]}

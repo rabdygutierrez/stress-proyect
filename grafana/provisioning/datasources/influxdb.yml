@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: k6 InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086 # Se conecta a InfluxDB por el nombre de servicio de Docker Compose
+    database: k6_metrics
+    user: admin
+    password: adminpassword
+    isDefault: true # Opcional: la convierte en la fuente de datos predeterminada
+    version: 1 # Importante para InfluxDB 1.x
+    jsonData:
+      timeInterval: 5s # Frecuencia de muestreo por defecto
+    editable: true
