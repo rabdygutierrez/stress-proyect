@@ -8,7 +8,7 @@ const users = new SharedArray('users', () => {
   return JSON.parse(open('/k6/scripts/data/usuarios_5566.json')).usuarios;
 });
 
-//Base URL según el entorno
+// Base URL según el entorno
 const BASE_URL = __ENV.ENV === 'QA' ? 'https://appservicestest.harvestful.org' : 'https://appservicestest.harvestful.org';
 
 // Métricas
@@ -26,37 +26,72 @@ const newSessionErrors = new Counter('newSession_errors');
 // Definir tipos de prueba
 export const testTypes = {
   smokeTest: {
-    vus: 10,
-    duration: '5'
+    vus: 5000,
+    duration: '1m'
   },
 };
 
 // Configurar opciones dinámicamente según el tipo de prueba
 export const options = __ENV.TYPE_TEST && testTypes[__ENV.TYPE_TEST]
   ? { stages: [{ duration: testTypes[__ENV.TYPE_TEST].duration, target: testTypes[__ENV.TYPE_TEST].vus }] }
-{ 
-    stages:stages: [
-      { duration: '1m', target: 500 },   // 500 VUs
-      { duration: '1m', target: 1000 },  // 1000 VUs
-      { duration: '1m', target: 1500 },  // 1500 VUs
-      { duration: '1m', target: 2000 },  // 2000 VUs
-      { duration: '1m', target: 2500 },  // 2500 VUs
-      { duration: '1m', target: 3000 },  // 3000 VUs
-      { duration: '1m', target: 3500 },  // 3500 VUs
-      { duration: '1m', target: 4000 },  // 4000 VUs
-      { duration: '1m', target: 4500 },  // 4500 VUs
-      { duration: '1m', target: 5000 },  // 5000 VUs
-      { duration: '1m', target: 5500 },  // 5500 VUs
-      { duration: '1m', target: 6000 },  // 6000 VUs
-      { duration: '15m', target: 6000 }, // Mantener 6000 VUs por 15 minutos
-      { duration: '1m', target: 0 }      // Reducir a 0 VUs
-    ]
+  : { stages: [
+    { duration: '30s', target: 200 },
+    { duration: '180s', target: 200 },
+    { duration: '30s', target: 400 },
+    { duration: '180s', target: 400 },
+    { duration: '30s', target: 600 },
+    { duration: '180s', target: 600 },
+    { duration: '30s', target: 800 },
+    { duration: '180s', target: 800 },
+    { duration: '30s', target: 1000 },
+    { duration: '180s', target: 1000 },
+    { duration: '30s', target: 1200 },
+    { duration: '180s', target: 1200 },
+    { duration: '30s', target: 1400 },
+    { duration: '180s', target: 1400 },
+    { duration: '30s', target: 1600 },
+    { duration: '180s', target: 1600 },
+    { duration: '30s', target: 1800 },
+    { duration: '180s', target: 1800 },
+    { duration: '30s', target: 2000 },
+    { duration: '180s', target: 2000 },
+    { duration: '30s', target: 2200 },
+    { duration: '180s', target: 2200 },
+    { duration: '30s', target: 2400 },
+    { duration: '180s', target: 2400 },
+    { duration: '30s', target: 2600 },
+    { duration: '180s', target: 2600 },
+    { duration: '30s', target: 2800 },
+    { duration: '180s', target: 2800 },
+    { duration: '30s', target: 3000 },
+    { duration: '180s', target: 3000 },
+    { duration: '30s', target: 3200 },
+    { duration: '180s', target: 3200 },
+    { duration: '30s', target: 3400 },
+    { duration: '180s', target: 3400 },
+    { duration: '30s', target: 3600 },
+    { duration: '180s', target: 3600 },
+    { duration: '30s', target: 3800 },
+    { duration: '180s', target: 3800 },
+    { duration: '30s', target: 4000 },
+    { duration: '180s', target: 4000 },
+    { duration: '30s', target: 4200 },
+    { duration: '180s', target: 4200 },
+    { duration: '30s', target: 4400 },
+    { duration: '180s', target: 4400 },
+    { duration: '30s', target: 4600 },
+    { duration: '180s', target: 4600 },
+    { duration: '30s', target: 4800 },
+    { duration: '180s', target: 4800 },
+    { duration: '30s', target: 5000 },
+    { duration: '180s', target: 5000 },
+    { duration: '120s', target: 0 },
+] 
   };
 
 export default function () {
   // Seleccionar un usuario único por VU
   const user = users[__VU % users.length];
-
 
   // --- authenticate ---
   const authPayload = JSON.stringify({
