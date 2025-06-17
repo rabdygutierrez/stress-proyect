@@ -35,6 +35,7 @@ export const testTypes = {
 export const options = __ENV.TYPE_TEST && testTypes[__ENV.TYPE_TEST]
   ? { stages: [{ duration: testTypes[__ENV.TYPE_TEST].duration, target: testTypes[__ENV.TYPE_TEST].vus }] }
   : { stages: [
+    { duration: '3m', target: 2000 }, 
     { duration: '10m', target: 2000 }, 
     { duration: '30s', target: 0 } 
   
