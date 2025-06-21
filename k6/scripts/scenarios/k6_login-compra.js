@@ -148,18 +148,10 @@ export default function () {
 
   const user_access_token = accessTokenRes.json('result.user_access_token');
 
-   console.log(JSON.stringify(
-    {  token: user_access_token
-    }));
+console.log(JSON.stringify({ token: user_access_token }));
+
   sleep(1);
 
-// Capturar el token y guardarlo en el archivo de salida
-const tokensFilePath = '/k6/output/tokens.json';  // Ruta donde se guardará el archivo de tokens
-const tokens = JSON.parse(open(tokensFilePath) || '[]');  // Leer el archivo, si no existe inicializa como un array vacío
-tokens.push({ token });  // Agregar el nuevo token al array
-
-// Escribir los tokens en el archivo de salida
-writeFileSync(tokensFilePath, JSON.stringify(tokens, null, 2));  // Guardar los tokens en formato JSON en el archivo
 
   // --- liveSession ---
   const livePayload = JSON.stringify({
