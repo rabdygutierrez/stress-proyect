@@ -114,6 +114,9 @@ export default function () {
   });
 
   const user_access_token = accessTokenRes.json('result.user_access_token');
+  console.log(JSON.stringify(
+    {  token: user_access_token
+  
   
   // --- liveSession ---
   const livePayload = JSON.stringify({
