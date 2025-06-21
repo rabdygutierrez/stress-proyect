@@ -27,7 +27,7 @@ const newSessionErrors = new Counter('newSession_errors');
 export const testTypes = {
   smokeTest: {
     vus: 2,
-    duration: '10m'
+    duration: '3s'
   },
 };
 
@@ -35,9 +35,9 @@ export const testTypes = {
 export const options = __ENV.TYPE_TEST && testTypes[__ENV.TYPE_TEST]
   ? { stages: [{ duration: testTypes[__ENV.TYPE_TEST].duration, target: testTypes[__ENV.TYPE_TEST].vus }] }
   : { stages: [
-    { duration: '3m', target: 1 }, 
-    { duration: '10m', target: 2 }, 
-    { duration: '30s', target: 0 } 
+    { duration: '1s', target: 1 }, 
+    { duration: '1s', target: 2 }, 
+    { duration: '1s', target: 0 } 
   
   ] };
 
