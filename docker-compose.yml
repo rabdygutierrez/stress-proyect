@@ -42,6 +42,7 @@ services:
     # Volúmenes para montar el script de k6 y opcionalmente otros archivos (ej. data.json)
     volumes:
       - ./k6:/k6 # Monta tu carpeta local 'k6' en '/k6' dentro del contenedor
+      - ./k6/output:/k6/output # para la salida del archivo del token
     environment:
       # Configuración de k6 para enviar métricas a InfluxDB
       # 'influxdb' es el nombre del servicio InfluxDB en Docker Compose
