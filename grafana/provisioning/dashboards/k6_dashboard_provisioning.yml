@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: 'k6 Dashboards'
+    orgId: 1
+    folder: '' # Deja vacío para que se muestre en la raíz
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards # Ruta dentro del contenedor
